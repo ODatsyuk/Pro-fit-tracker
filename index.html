@@ -44,12 +44,6 @@ background:#0f172a;
 padding:10px;
 border-radius:10px;
 margin-top:10px;
-transition:transform 0.15s ease, opacity 0.15s ease;
-}
-
-.exercise.dragging{
-opacity:0.6;
-transform:scale(1.02);
 }
 
 .set{
@@ -141,10 +135,7 @@ padding:10px;
 
 <div class="card">
 <h3>⏳ Відпочинок</h3>
-<div class="small">Між підходами (сек)</div>
 <input id="restSet" type="number" value="90">
-
-<div class="small">Між вправами (сек)</div>
 <input id="restEx" type="number" value="180">
 </div>
 
@@ -177,18 +168,15 @@ padding:10px;
 
 <h3>🧠 AI Анкета</h3>
 
-<div class="small">Важкість (1-5)</div>
-<input id="q1" type="number">
+<input id="q1" type="number" placeholder="Важкість 1-5">
 
-<div class="small">Відказ?</div>
 <select id="q2">
-<option value="no">Ні</option>
-<option value="yes">Так</option>
+<option value="no">Ні відказу</option>
+<option value="yes">Був відказ</option>
 </select>
 
-<div class="small">Енергія</div>
 <select id="q3">
-<option value="low">Низька</option>
+<option value="low">Низька енергія</option>
 <option value="mid">Середня</option>
 <option value="high">Висока</option>
 </select>
@@ -211,7 +199,7 @@ let mainTimer=null;
 let restTimer=null;
 let done={};
 
-/* DATE */
+/* INIT DATE */
 document.getElementById("date").onchange=(e)=>{
 date=e.target.value;
 render();
@@ -225,143 +213,61 @@ localStorage.setItem("fit",JSON.stringify(data));
 /* ADD */
 function add(){
 
-let d=document.getElementById("date").value;
+if(!date) date=document.getElementById("date").value;
+
 let name=document.getElementById("name").value;
 let sets=+document.getElementById("sets").value;
 let reps=+document.getElementById("reps").value;
 let weight=+document.getElementById("weight").value;
 
-if(!d||!name||!sets||!reps||!weight) return;
+if(!date||!name||!sets||!reps||!weight) return;
 
-if(!data[d]) data[d]=[];
+if(!data[date]) data[date]=[];
 
 let arr=[];
 for(let i=0;i<sets;i++){
 arr.push({r:reps,w:weight});
 }
 
-data[d].push({name,arr,note:""});
-
+data[date].push({name,arr});
 save();
 render();
 }
 
-/* COPY / PASTE */
+/* COPY */
 function copyDay(){
 if(!data[date]) return;
 localStorage.setItem("copiedDay",JSON.stringify(data[date]));
-alert("День скопійовано ✔");
+alert("Скопійовано ✔");
 }
 
+/* PASTE */
 function pasteDay(){
 let c=localStorage.getItem("copiedDay");
-if(!c){alert("Немає копії ❌");return;}
+if(!c) return;
 
-data[date]=JSON.parse(JSON.stringify(JSON.parse(c)));
-
+data[date]=JSON.parse(c);
 save();
 render();
 alert("Вставлено ✔");
 }
 
-/* DATE INFO */
-function updateDateInfo(){
-
-let d=new Date(date || new Date());
-
-let days=[
-"Неділя","Понеділок","Вівторок","Середа",
-"Четвер","П’ятниця","Субота"
-];
-
-let dayName=days[d.getDay()];
-let formatted=d.toISOString().split("T")[0];
-
-document.getElementById("dateInfo").innerText=
-`📅 ${formatted} | ${dayName}`;
-}
-
-/* START */
-function start(){
-active=true;
-done={};
-startTime=new Date();
-
-mainTimer=setInterval(()=>{
-let d=Math.floor((new Date()-startTime)/1000);
-let m=Math.floor(d/60),s=d%60;
-timerBox.innerText=`⏱ ${m}:${s<10?'0':''}${s}`;
-},1000);
-}
-
-/* REST */
-function showRest(sec){
-let t=sec;
-clearInterval(restTimer);
-
-restTimer=setInterval(()=>{
-restBox.innerText=`⏳ ${t}s`;
-t--;
-if(t<0){
-clearInterval(restTimer);
-restBox.innerText="⏳ готово";
-}
-},1000);
-}
-
-/* DONE */
-function doneSet(i,j,last){
-done[i+"-"+j]=true;
-
-if(last) showRest(+restEx.value);
-else showRest(+restSet.value);
-
-render();
-}
-
-/* FINISH */
-function finish(){
-active=false;
-clearInterval(mainTimer);
-document.getElementById("modal").style.display="flex";
-}
-
-/* AI */
-function getAI(){
-
-let effort=+q1.value;
-let fail=q2.value;
-let energy=q3.value;
-
-let msg="";
-
-if(effort>=4 && fail==="yes"){
-msg="🔴 Перевантаження";
-}
-else if(energy==="high"){
-msg="🟢 Прогрес можливий";
-}
-else{
-msg="🟡 Стабільний режим";
-}
-
-result.innerText=msg;
-}
-
-function closeAI(){
-modal.style.display="none";
-}
-
-/* DELETE FIX ✔ */
+/* DELETE */
 function deleteExercise(i){
 data[date].splice(i,1);
 save();
 render();
 }
 
+/* UPDATE WEIGHT (FIX 🔥) */
+function updateWeight(i,j,value){
+data[date][i].arr[j].w=Number(value);
+save();
+render();
+}
+
 /* RENDER */
 function render(){
-
 list.innerHTML="";
 if(!data[date]) return;
 
@@ -374,7 +280,7 @@ ${s.r} x
 onchange="updateWeight(${i},${j},this.value)"
 style="width:70px;">
 кг
-<button onclick="doneSet(${i},${j},${j===e.arr.length-1})">✔</button>
+<button onclick="done[i+'-'+j]=true;render()">✔</button>
 </div>
 `).join("");
 
@@ -389,6 +295,56 @@ ${sets}
 
 </div>`;
 });
+}
+
+/* AI */
+function getAI(){
+
+let effort=+q1.value;
+let fail=q2.value;
+let energy=q3.value;
+
+let msg="";
+
+if(effort>=4 && fail==="yes"){
+msg="🔴 Зменш навантаження";
+}
+else if(energy==="high"){
+msg="🟢 Можеш прогресувати";
+}
+else{
+msg="🟡 Стабільний режим";
+}
+
+result.innerText=msg;
+}
+
+function closeAI(){
+modal.style.display="none";
+}
+
+/* START */
+function start(){
+active=true;
+startTime=new Date();
+
+mainTimer=setInterval(()=>{
+let d=Math.floor((new Date()-startTime)/1000);
+timerBox.innerText=`⏱ ${d}s`;
+},1000);
+}
+
+/* FINISH */
+function finish(){
+active=false;
+clearInterval(mainTimer);
+modal.style.display="flex";
+}
+
+/* DATE INFO */
+function updateDateInfo(){
+let d=new Date(date||new Date());
+dateInfo.innerText=d.toDateString();
 }
 
 /* INIT */
