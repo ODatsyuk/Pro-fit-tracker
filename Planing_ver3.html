@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Pro-Fit Tracker</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial;
+    background:#0b0f1a;
+    color:white;
+}
+
+.container{max-width:900px;margin:auto;padding:15px;}
+
+h1{text-align:center;color:#00f5ff;}
+
+.dateTop{
+    text-align:center;
+    color:#00f5ff;
+    font-size:18px;
+}
+
+.card{
+    background:#111827;
+    padding:15px;
+    margin-top:15px;
+    border-radius:12px;
+}
+
+input,button{
+    width:100%;
+    padding:10px;
+    margin-top:5px;
+    border-radius:8px;
+    border:none;
+}
+
+input{
+    background:#0f172a;
+    color:white;
+}
+
+input::placeholder{color:#94a3b8;}
+
+button{
+    background:#00f5ff;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+.exercise{
+    background:#0f172a;
+    margin-top:10px;
+    padding:10px;
+    border-radius:10px;
+}
+
+.set{
+    display:flex;
+    justify-content:space-between;
+    margin-top:5px;
+    padding:6px;
+    background:#0b1220;
+    border-radius:8px;
+}
+
+.set.done{
+    text-decoration: line-through;
+    opacity:0.6;
+}
+
+.timerFloat{
+    position:fixed;
+    top:10px;
+    right:10px;
+    background:#111827;
+    border:1px solid #00f5ff;
+    padding:10px;
+    border-radius:12px;
+    color:#00f5ff;
+    width:280px;
+    font-size:13px;
+}
+
+.deleteBtn{
+    background:#ff3b3b;
+    width:auto;
+    padding:5px 10px;
+    font-size:12px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="timerFloat" id="timerBox">
+⏱ Тренування: 00:00<br>
+⏳ Відпочинок: -
+</div>
+
+<div class="container">
+
+<h1>🏋️ Pro-Fit Tracker</h1>
+
+<div class="dateTop" id="fullDate">---</div>
+
+<div class="card">
+    <h3>📅 Дата</h3>
+    <input type="date" id="datePicker">
+</div>
+
+<!-- 🔥 REST SETTINGS ПОВЕРНУЛИ -->
+<div class="card">
+    <h3>⚙️ Відпочинок</h3>
+
+    <label>Між підходами (сек)</label>
+    <input id="restSet" type="number" value="90">
+
+    <label>Між вправами (сек)</label>
+    <input id="restEx" type="number" value="180">
+</div>
+
+<div class="card">
+    <h3>➕ Додати вправу</h3>
+    <input id="name" placeholder="Назва">
+    <input id="sets" type="number" placeholder="Підходи">
+    <input id="reps" type="number" placeholder="Повторення">
+    <input id="weight" type="number" placeholder="Вага (кг)">
+    <button onclick="addExercise()">Додати</button>
+</div>
+
+<div class="card">
+    <button onclick="startSession()">▶ Почати тренування</button>
+    <button onclick="endSession()">🏁 Завершити</button>
+</div>
+
+<div class="card">
+    <div id="list"></div>
+</div>
+
+</div>
+
+<script>
+let data = JSON.parse(localStorage.getItem("fitData")) || {};
+let selectedDate = "";
+
+/* SESSION */
+let sessionActive = false;
+let startTime = null;
+
+let mainTimer=null;
+let restTimer=null;
+let restLeft=0;
+
+let sessionDone={};
+
+/* DATE */
+document.getElementById("datePicker").addEventListener("change",(e)=>{
+    selectedDate=e.target.value;
+    updateDate();
+    render();
+});
+
+function updateDate(){
+    let d=new Date(selectedDate);
+    let days=["Нд","Пн","Вт","Ср","Чт","Пт","Сб"];
+    fullDate.innerText=`${days[d.getDay()]} • ${selectedDate}`;
+}
+
+/* SAVE */
+function save(){
+    localStorage.setItem("fitData",JSON.stringify(data));
+}
+
+/* ADD */
+function addExercise(){
+    if(!selectedDate) return;
+
+    let name=document.getElementById("name").value;
+    let sets=+document.getElementById("sets").value;
+    let reps=+document.getElementById("reps").value;
+    let weight=+document.getElementById("weight").value;
+
+    if(!name||!sets||!reps||!weight) return;
+
+    if(!data[selectedDate]) data[selectedDate]=[];
+
+    let arr=[];
+    for(let i=0;i<sets;i++){
+        arr.push({reps,weight});
+    }
+
+    data[selectedDate].push({name,sets:arr});
+    save();
+    render();
+}
+
+/* START */
+function startSession(){
+    sessionActive=true;
+    sessionDone={};
+    startTime=new Date();
+
+    startMainTimer();
+    render();
+}
+
+/* MAIN TIMER */
+function startMainTimer(){
+    clearInterval(mainTimer);
+
+    mainTimer=setInterval(()=>{
+        let diff=Math.floor((new Date()-startTime)/1000);
+
+        let m=Math.floor(diff/60);
+        let s=diff%60;
+
+        document.getElementById("timerBox").innerHTML=`
+        ⏱ Тренування: ${m}:${s<10?'0':''}${s}<br>
+        ⏳ Відпочинок: ${restLeft>0 ? restLeft+" сек" : "-"}
+        `;
+    },1000);
+}
+
+/* REST TIMER */
+function startRest(type){
+    clearInterval(restTimer);
+
+    restLeft = type==="set"
+        ? +document.getElementById("restSet").value
+        : +document.getElementById("restEx").value;
+
+    restTimer=setInterval(()=>{
+        restLeft--;
+        if(restLeft<=0){
+            clearInterval(restTimer);
+            restLeft=0;
+        }
+    },1000);
+}
+
+/* DONE */
+function doneSet(i,j){
+    if(!sessionActive) return;
+
+    sessionDone[`${i}-${j}`]=true;
+
+    startRest("set"); // між підходами
+    render();
+}
+
+/* DELETE */
+function deleteExercise(i){
+    data[selectedDate].splice(i,1);
+    save();
+    render();
+}
+
+/* END */
+function endSession(){
+    sessionActive=false;
+
+    clearInterval(mainTimer);
+    clearInterval(restTimer);
+
+    let total=Math.floor((new Date()-startTime)/1000);
+
+    let m=Math.floor(total/60);
+    let s=total%60;
+
+    document.getElementById("timerBox").innerHTML=`
+    ⏱ Тренування: ${m} хв ${s} сек<br>
+    ⏳ Відпочинок: -
+    `;
+
+    startTime=null;
+    sessionDone={};
+
+    render();
+}
+
+/* RENDER */
+function render(){
+    let list=document.getElementById("list");
+    list.innerHTML="";
+
+    if(!data[selectedDate]) return;
+
+    data[selectedDate].forEach((ex,i)=>{
+
+        let setsHTML=ex.sets.map((s,j)=>{
+
+            let done=sessionDone[`${i}-${j}`];
+
+            return `
+            <div class="set ${done?'done':''}">
+                <div>${s.reps} x ${s.weight} кг</div>
+                <button onclick="doneSet(${i},${j})">✔</button>
+            </div>`;
+        }).join("");
+
+        list.innerHTML+=`
+        <div class="exercise">
+            <h3>
+                ${ex.name}
+                <button class="deleteBtn" onclick="deleteExercise(${i})">🗑</button>
+            </h3>
+            ${setsHTML}
+        </div>`;
+    });
+}
+
+/* INIT */
+(function(){
+    let today=new Date().toISOString().split("T")[0];
+    document.getElementById("datePicker").value=today;
+    selectedDate=today;
+
+    updateDate();
+    render();
+})();
+</script>
+
+</body>
+</html>
