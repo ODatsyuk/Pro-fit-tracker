@@ -3,154 +3,40 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-
 <title>Pro-Fit Tracker</title>
 
-<!-- 🔥 PWA -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0b0f1a">
 
-<!-- 🍏 iOS APP MODE -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="ProFit">
 
-<!-- 🧊 STYLE -->
 <style>
-body{
-    margin:0;
-    font-family:-apple-system,BlinkMacSystemFont;
-    background:#0b0f1a;
-    color:white;
-}
-
-/* SAFE AREA */
-.safe{
-    padding-top:env(safe-area-inset-top);
-    padding-bottom:env(safe-area-inset-bottom);
-}
-
-/* HEADER (як iOS app) */
-.header{
-    position:sticky;
-    top:0;
-    background:#0b0f1a;
-    padding:15px;
-    text-align:center;
-    font-size:20px;
-    font-weight:bold;
-    border-bottom:1px solid #111827;
-}
-
-/* FLOAT TIMER */
-.timer{
-    position:fixed;
-    top:10px;
-    right:10px;
-    background:#111827;
-    border:1px solid #00f5ff;
-    padding:10px;
-    border-radius:14px;
-    color:#00f5ff;
-    font-size:12px;
-}
-
-/* CONTAINER */
-.container{
-    padding:15px;
-}
-
-/* CARD */
-.card{
-    background:#111827;
-    border-radius:16px;
-    padding:15px;
-    margin-bottom:15px;
-}
-
-/* INPUT */
-input{
-    width:100%;
-    padding:12px;
-    margin-top:5px;
-    border-radius:10px;
-    border:none;
-    background:#0f172a;
-    color:white;
-}
-
-/* BUTTON */
-button{
-    width:100%;
-    padding:14px;
-    margin-top:8px;
-    border-radius:12px;
-    border:none;
-    background:#00f5ff;
-    font-weight:bold;
-}
-
-/* EXERCISE */
-.exercise{
-    background:#0f172a;
-    padding:10px;
-    border-radius:12px;
-    margin-top:10px;
-}
-
-/* SET */
-.set{
-    display:flex;
-    justify-content:space-between;
-    padding:8px;
-    margin-top:5px;
-    background:#0b1220;
-    border-radius:8px;
-}
-
-.set.done{
-    text-decoration:line-through;
-    opacity:0.6;
-}
-
-/* DELETE */
-.delete{
-    background:#ff3b3b;
-    padding:5px 10px;
-    font-size:12px;
-    width:auto;
-}
-
-/* iOS style кнопки */
-.btnRow{
-    display:flex;
-    gap:10px;
-}
-
-.btnRow button{
-    flex:1;
-}
+body{margin:0;font-family:-apple-system;background:#0b0f1a;color:white;}
+.header{padding:15px;text-align:center;font-size:20px;}
+.container{padding:15px;}
+.card{background:#111827;padding:15px;border-radius:16px;margin-bottom:15px;}
+input,select,button{width:100%;padding:10px;margin-top:5px;border-radius:10px;border:none;}
+input,select{background:#0f172a;color:white;}
+button{background:#00f5ff;font-weight:bold;}
+.exercise{background:#0f172a;padding:10px;border-radius:12px;margin-top:10px;}
+.set{display:flex;justify-content:space-between;padding:8px;margin-top:5px;background:#0b1220;border-radius:8px;}
+.set.done{text-decoration:line-through;opacity:0.6;}
+.timer{position:fixed;top:10px;right:10px;background:#111827;border:1px solid #00f5ff;padding:10px;border-radius:12px;color:#00f5ff;font-size:12px;}
+canvas{background:#0f172a;border-radius:12px;margin-top:10px;}
 </style>
 </head>
 
-<body class="safe">
+<body>
 
 <div class="header">🏋️ Pro-Fit Tracker</div>
 
-<div class="timer" id="timerBox">
-⏱ 00:00<br>⏳ -
-</div>
+<div class="timer" id="timerBox">⏱ 00:00<br>⏳ -</div>
 
 <div class="container">
 
 <div class="card">
 <input type="date" id="date">
-</div>
-
-<div class="card">
-<h3>Відпочинок</h3>
-<input id="restSet" type="number" value="90" placeholder="Між підходами">
-<input id="restEx" type="number" value="180" placeholder="Між вправами">
 </div>
 
 <div class="card">
@@ -162,9 +48,15 @@ button{
 <button onclick="add()">Додати</button>
 </div>
 
-<div class="card btnRow">
+<div class="card">
 <button onclick="start()">▶ Старт</button>
 <button onclick="end()">🏁 Фініш</button>
+</div>
+
+<div class="card">
+<h3>📊 Прогрес</h3>
+<select id="exerciseSelect"></select>
+<canvas id="chart" height="200"></canvas>
 </div>
 
 <div id="list"></div>
@@ -172,41 +64,31 @@ button{
 </div>
 
 <script>
-let data = JSON.parse(localStorage.getItem("fit")) || {};
-let date = "";
-let active=false;
-let startTime=null;
-let mainTimer=null;
-let restTimer=null;
-let restLeft=0;
+let data=JSON.parse(localStorage.getItem("fit"))||{};
+let date="";
+let active=false,startTime=null,mainTimer=null;
 let done={};
 
-document.getElementById("date").onchange=(e)=>{
+dateInput=document.getElementById("date");
+
+dateInput.onchange=(e)=>{
     date=e.target.value;
     render();
 };
 
-function save(){
-    localStorage.setItem("fit",JSON.stringify(data));
-}
+function save(){localStorage.setItem("fit",JSON.stringify(data));}
 
 function add(){
-    if(!date) return;
-    let n=name.value;
-    let s=+sets.value;
-    let r=+reps.value;
-    let w=+weight.value;
-
-    if(!n||!s||!r||!w) return;
-
-    if(!data[date]) data[date]=[];
-
+    if(!date)return;
+    let n=name.value,s=+sets.value,r=+reps.value,w=+weight.value;
+    if(!n||!s||!r||!w)return;
+    if(!data[date])data[date]=[];
     let arr=[];
-    for(let i=0;i<s;i++) arr.push({r,w});
-
+    for(let i=0;i<s;i++)arr.push({r,w});
     data[date].push({n,arr});
     save();
     render();
+    updateExerciseList();
 }
 
 function start(){
@@ -220,62 +102,32 @@ function timer(){
     clearInterval(mainTimer);
     mainTimer=setInterval(()=>{
         let d=Math.floor((new Date()-startTime)/1000);
-        let m=Math.floor(d/60);
-        let s=d%60;
-
-        timerBox.innerHTML=`
-        ⏱ ${m}:${s<10?'0':''}${s}<br>
-        ⏳ ${restLeft||'-'}
-        `;
-    },1000);
-}
-
-function rest(type){
-    clearInterval(restTimer);
-    restLeft= type==="set"
-        ? +restSet.value
-        : +restEx.value;
-
-    restTimer=setInterval(()=>{
-        restLeft--;
-        if(restLeft<=0){
-            restLeft=0;
-            clearInterval(restTimer);
-        }
+        let m=Math.floor(d/60),s=d%60;
+        timerBox.innerHTML=`⏱ ${m}:${s<10?'0':''}${s}`;
     },1000);
 }
 
 function doneSet(i,j){
-    if(!active) return;
-    done[`${i}-${j}`]=true;
-    rest("set");
-    render();
-}
-
-function del(i){
-    data[date].splice(i,1);
-    save();
+    if(!active)return;
+    done[i+"-"+j]=true;
     render();
 }
 
 function end(){
     active=false;
     clearInterval(mainTimer);
-    clearInterval(restTimer);
-    restLeft=0;
     done={};
     render();
 }
 
 function render(){
     list.innerHTML="";
-    if(!data[date]) return;
+    if(!data[date])return;
 
     data[date].forEach((e,i)=>{
-        let sets=e.arr.map((s,j)=>{
-            let d=done[`${i}-${j}`];
-            return `
-            <div class="set ${d?'done':''}">
+        let setsHTML=e.arr.map((s,j)=>{
+            let d=done[i+"-"+j];
+            return `<div class="set ${d?'done':''}">
                 ${s.r} x ${s.w} кг
                 <button onclick="doneSet(${i},${j})">✔</button>
             </div>`;
@@ -284,16 +136,82 @@ function render(){
         list.innerHTML+=`
         <div class="card exercise">
             <b>${e.n}</b>
-            <button class="delete" onclick="del(${i})">🗑</button>
-            ${sets}
+            ${setsHTML}
         </div>`;
     });
 }
 
-/* 🔥 PWA */
-if("serviceWorker" in navigator){
-    navigator.serviceWorker.register("sw.js");
+/* 🔥 ГРАФІК */
+
+function updateExerciseList(){
+    let select=document.getElementById("exerciseSelect");
+    let names=new Set();
+
+    Object.values(data).forEach(day=>{
+        day.forEach(ex=>names.add(ex.n));
+    });
+
+    select.innerHTML=[...names].map(n=>`<option>${n}</option>`).join("");
 }
+
+document.getElementById("exerciseSelect").onchange=drawChart;
+
+function drawChart(){
+    let name=exerciseSelect.value;
+    let points=[];
+
+    Object.keys(data).sort().forEach(d=>{
+        let day=data[d];
+        let max=0;
+
+        day.forEach(ex=>{
+            if(ex.n===name){
+                ex.arr.forEach(s=>{
+                    if(s.w>max)max=s.w;
+                });
+            }
+        });
+
+        if(max>0)points.push({d,max});
+    });
+
+    let canvas=document.getElementById("chart");
+    let ctx=canvas.getContext("2d");
+
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    if(points.length<2)return;
+
+    let maxW=Math.max(...points.map(p=>p.max));
+    let stepX=canvas.width/(points.length-1);
+
+    ctx.beginPath();
+    ctx.strokeStyle="#00f5ff";
+    ctx.lineWidth=3;
+
+    points.forEach((p,i)=>{
+        let x=i*stepX;
+        let y=canvas.height-(p.max/maxW)*canvas.height;
+
+        if(i===0)ctx.moveTo(x,y);
+        else ctx.lineTo(x,y);
+
+        ctx.fillStyle="#00f5ff";
+        ctx.beginPath();
+        ctx.arc(x,y,4,0,Math.PI*2);
+        ctx.fill();
+    });
+
+    ctx.stroke();
+}
+
+/* INIT */
+(function(){
+    let today=new Date().toISOString().split("T")[0];
+    dateInput.value=today;
+    date=today;
+    updateExerciseList();
+})();
 </script>
 
 </body>
