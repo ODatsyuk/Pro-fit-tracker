@@ -2,14 +2,8 @@
 <html lang="uk">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Pro-Fit Tracker</title>
-
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0b0f1a">
-
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
 <style>
 body{margin:0;font-family:-apple-system;background:#0b0f1a;color:white;}
@@ -23,6 +17,7 @@ button{background:#00f5ff;font-weight:bold;}
 .set{display:flex;justify-content:space-between;padding:8px;margin-top:5px;background:#0b1220;border-radius:8px;}
 .set.done{text-decoration:line-through;opacity:0.6;}
 .timer{position:fixed;top:10px;right:10px;background:#111827;border:1px solid #00f5ff;padding:10px;border-radius:12px;color:#00f5ff;font-size:12px;}
+.delete{background:red;margin-top:5px;}
 canvas{background:#0f172a;border-radius:12px;margin-top:10px;}
 </style>
 </head>
@@ -40,11 +35,17 @@ canvas{background:#0f172a;border-radius:12px;margin-top:10px;}
 </div>
 
 <div class="card">
+<h3>⏳ Відпочинок</h3>
+<input id="restSet" type="number" value="90" placeholder="Між підходами">
+<input id="restEx" type="number" value="180" placeholder="Між вправами">
+</div>
+
+<div class="card">
 <h3>Додати вправу</h3>
-<input id="name" placeholder="Назва">
-<input id="sets" type="number" placeholder="Підходи">
-<input id="reps" type="number" placeholder="Повторення">
-<input id="weight" type="number" placeholder="Вага (кг)">
+<input id="nameInput" placeholder="Назва">
+<input id="setsInput" type="number" placeholder="Підходи">
+<input id="repsInput" type="number" placeholder="Повторення">
+<input id="weightInput" type="number" placeholder="Вага (кг)">
 <button onclick="add()">Додати</button>
 </div>
 
@@ -67,9 +68,10 @@ canvas{background:#0f172a;border-radius:12px;margin-top:10px;}
 let data=JSON.parse(localStorage.getItem("fit"))||{};
 let date="";
 let active=false,startTime=null,mainTimer=null;
+let restTimer=null,restLeft=0;
 let done={};
 
-dateInput=document.getElementById("date");
+const dateInput=document.getElementById("date");
 
 dateInput.onchange=(e)=>{
     date=e.target.value;
@@ -80,12 +82,21 @@ function save(){localStorage.setItem("fit",JSON.stringify(data));}
 
 function add(){
     if(!date)return;
-    let n=name.value,s=+sets.value,r=+reps.value,w=+weight.value;
+
+    const n=document.getElementById("nameInput").value;
+    const s=+document.getElementById("setsInput").value;
+    const r=+document.getElementById("repsInput").value;
+    const w=+document.getElementById("weightInput").value;
+
     if(!n||!s||!r||!w)return;
+
     if(!data[date])data[date]=[];
+
     let arr=[];
     for(let i=0;i<s;i++)arr.push({r,w});
+
     data[date].push({n,arr});
+
     save();
     render();
     updateExerciseList();
@@ -103,19 +114,55 @@ function timer(){
     mainTimer=setInterval(()=>{
         let d=Math.floor((new Date()-startTime)/1000);
         let m=Math.floor(d/60),s=d%60;
-        timerBox.innerHTML=`⏱ ${m}:${s<10?'0':''}${s}`;
+
+        timerBox.innerHTML=`
+        ⏱ ${m}:${s<10?'0':''}${s}<br>
+        ⏳ ${restLeft||'-'}
+        `;
     },1000);
 }
 
-function doneSet(i,j){
+function startRest(type){
+    clearInterval(restTimer);
+
+    restLeft = type==="set"
+        ? +document.getElementById("restSet").value
+        : +document.getElementById("restEx").value;
+
+    restTimer=setInterval(()=>{
+        restLeft--;
+        if(restLeft<=0){
+            restLeft=0;
+            clearInterval(restTimer);
+        }
+    },1000);
+}
+
+function doneSet(i,j,last){
     if(!active)return;
+
     done[i+"-"+j]=true;
+
+    if(last){
+        startRest("exercise");
+    }else{
+        startRest("set");
+    }
+
+    render();
+}
+
+function delExercise(i){
+    data[date].splice(i,1);
+    save();
     render();
 }
 
 function end(){
     active=false;
     clearInterval(mainTimer);
+    clearInterval(restTimer);
+    restLeft=0;
     done={};
     render();
 }
@@ -127,22 +174,24 @@ function render(){
     data[date].forEach((e,i)=>{
         let setsHTML=e.arr.map((s,j)=>{
             let d=done[i+"-"+j];
+            let last=j===e.arr.length-1;
+
             return `<div class="set ${d?'done':''}">
                 ${s.r} x ${s.w} кг
-                <button onclick="doneSet(${i},${j})">✔</button>
+                <button onclick="doneSet(${i},${j},${last})">✔</button>
             </div>`;
         }).join("");
 
         list.innerHTML+=`
         <div class="card exercise">
             <b>${e.n}</b>
+            <button class="delete" onclick="delExercise(${i})">🗑 Видалити</button>
             ${setsHTML}
         </div>`;
     });
 }
 
-/* 🔥 ГРАФІК */
-
+/* ГРАФІК */
 function updateExerciseList(){
     let select=document.getElementById("exerciseSelect");
     let names=new Set();
@@ -161,10 +210,9 @@ function drawChart(){
     let points=[];
 
     Object.keys(data).sort().forEach(d=>{
-        let day=data[d];
         let max=0;
 
-        day.forEach(ex=>{
+        data[d].forEach(ex=>{
             if(ex.n===name){
                 ex.arr.forEach(s=>{
                     if(s.w>max)max=s.w;
@@ -172,7 +220,7 @@ function drawChart(){
             }
         });
 
-        if(max>0)points.push({d,max});
+        if(max>0)points.push(max);
     });
 
     let canvas=document.getElementById("chart");
@@ -182,7 +230,7 @@ function drawChart(){
 
     if(points.length<2)return;
 
-    let maxW=Math.max(...points.map(p=>p.max));
+    let maxW=Math.max(...points);
     let stepX=canvas.width/(points.length-1);
 
     ctx.beginPath();
@@ -191,7 +239,7 @@ function drawChart(){
 
     points.forEach((p,i)=>{
         let x=i*stepX;
-        let y=canvas.height-(p.max/maxW)*canvas.height;
+        let y=canvas.height-(p/maxW)*canvas.height;
 
         if(i===0)ctx.moveTo(x,y);
         else ctx.lineTo(x,y);
