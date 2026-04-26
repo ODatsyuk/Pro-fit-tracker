@@ -122,6 +122,8 @@ color:#00f5ff;
 padding:10px;
 }
 </style>
+  <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#00f5ff">
 </head>
 
 <body>
@@ -400,6 +402,11 @@ render();
 updateDateInfo();
 })();
 
+</script>
+  <script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
 </script>
 
 </body>
