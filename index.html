@@ -44,12 +44,13 @@ background:#0f172a;
 padding:10px;
 border-radius:10px;
 margin-top:10px;
-transition:transform 0.15s ease, opacity 0.15s ease;
+transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .exercise.dragging{
 opacity:0.6;
-transform:scale(1.02);
+transform:scale(1.03);
+box-shadow:0 10px 25px rgba(0,0,0,0.5);
 }
 
 .set{
@@ -94,6 +95,7 @@ padding:10px;
 border-radius:12px;
 color:#a78bfa;
 font-size:12px;
+display:block;
 }
 
 .modal{
@@ -114,23 +116,12 @@ width:90%;
 
 .small{font-size:12px;opacity:0.8;}
 .close{background:#ff3b3b;margin-top:10px;}
-
-#dateInfo{
-text-align:center;
-font-size:14px;
-color:#00f5ff;
-padding:10px;
-}
 </style>
-  <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#00f5ff">
 </head>
 
 <body>
 
 <div class="header">🏋️ Pro-Fit Tracker AI FULL+</div>
-
-<div class="card" id="dateInfo">📅</div>
 
 <div class="timer" id="timerBox">⏱ 00:00</div>
 <div class="restBox" id="restBox">⏳ 0s</div>
@@ -143,6 +134,7 @@ padding:10px;
 
 <div class="card">
 <h3>⏳ Відпочинок</h3>
+
 <div class="small">Між підходами (сек)</div>
 <input id="restSet" type="number" value="90">
 
@@ -164,9 +156,6 @@ padding:10px;
 <div class="card">
 <button onclick="start()">▶ Старт</button>
 <button onclick="finish()">🏁 Завершити тренування</button>
-
-<button onclick="copyDay()">📋 Копіювати день</button>
-<button onclick="pasteDay()">📥 Вставити день</button>
 </div>
 
 <div id="list"></div>
@@ -196,6 +185,7 @@ padding:10px;
 </select>
 
 <button onclick="getAI()">Отримати пораду</button>
+
 <button class="close" onclick="closeAI()">Закрити</button>
 
 <div id="result" style="margin-top:10px;color:#00f5ff;"></div>
@@ -213,13 +203,15 @@ let mainTimer=null;
 let restTimer=null;
 let done={};
 
+let draggedIndex=null;
+
 /* DATE */
 document.getElementById("date").onchange=(e)=>{
 date=e.target.value;
 render();
-updateDateInfo();
 };
 
+/* SAVE */
 function save(){
 localStorage.setItem("fit",JSON.stringify(data));
 }
@@ -242,72 +234,84 @@ for(let i=0;i<sets;i++){
 arr.push({r:reps,w:weight});
 }
 
-data[d].push({name,arr,note:""});
+data[d].push({name,arr});
 
 save();
 render();
 }
 
-/* COPY / PASTE */
-function copyDay(){
-if(!data[date]) return;
-localStorage.setItem("copiedDay",JSON.stringify(data[date]));
-alert("День скопійовано ✔");
+/* DRAG & DROP FIX */
+function dragStart(event){
+draggedIndex = +event.currentTarget.dataset.index;
+event.currentTarget.classList.add("dragging");
 }
 
-function pasteDay(){
-let c=localStorage.getItem("copiedDay");
-if(!c){alert("Немає копії ❌");return;}
+function dragOver(event){
+event.preventDefault();
+}
 
-data[date]=JSON.parse(JSON.stringify(JSON.parse(c)));
+function drop(event){
+
+let targetIndex = +event.currentTarget.dataset.index;
+
+if(draggedIndex===null || draggedIndex===targetIndex) return;
+
+let arr = data[date];
+
+let item = arr.splice(draggedIndex,1)[0];
+arr.splice(targetIndex,0,item);
+
+draggedIndex=null;
 
 save();
 render();
-alert("Вставлено ✔");
 }
 
-/* DATE INFO */
-function updateDateInfo(){
-
-let d=new Date(date || new Date());
-
-let days=[
-"Неділя","Понеділок","Вівторок","Середа",
-"Четвер","П’ятниця","Субота"
-];
-
-let dayName=days[d.getDay()];
-let formatted=d.toISOString().split("T")[0];
-
-document.getElementById("dateInfo").innerText=
-`📅 ${formatted} | ${dayName}`;
+function dragEnd(event){
+event.currentTarget.classList.remove("dragging");
+draggedIndex=null;
 }
 
-/* START */
+/* START TIMER FIX */
 function start(){
+
 active=true;
 done={};
 startTime=new Date();
 
+clearInterval(mainTimer);
+
+timerBox.innerText="⏱ 00:00";
+
 mainTimer=setInterval(()=>{
+
 let d=Math.floor((new Date()-startTime)/1000);
 let m=Math.floor(d/60),s=d%60;
+
 timerBox.innerText=`⏱ ${m}:${s<10?'0':''}${s}`;
+
 },1000);
 }
 
-/* REST */
+/* REST FIX */
 function showRest(sec){
+
 let t=sec;
+
 clearInterval(restTimer);
 
+restBox.style.display="block";
+
 restTimer=setInterval(()=>{
+
 restBox.innerText=`⏳ ${t}s`;
 t--;
+
 if(t<0){
 clearInterval(restTimer);
 restBox.innerText="⏳ готово";
 }
+
 },1000);
 }
 
@@ -325,7 +329,15 @@ render();
 function finish(){
 active=false;
 clearInterval(mainTimer);
+clearInterval(restTimer);
 document.getElementById("modal").style.display="flex";
+}
+
+/* DELETE */
+function deleteExercise(i){
+data[date].splice(i,1);
+save();
+render();
 }
 
 /* AI */
@@ -354,13 +366,6 @@ function closeAI(){
 modal.style.display="none";
 }
 
-/* DELETE FIX ✔ */
-function deleteExercise(i){
-data[date].splice(i,1);
-save();
-render();
-}
-
 /* RENDER */
 function render(){
 
@@ -373,7 +378,7 @@ let sets=e.arr.map((s,j)=>`
 <div class="set ${done[i+"-"+j]?'done':''}">
 ${s.r} x 
 <input type="number" value="${s.w}"
-onchange="updateWeight(${i},${j},this.value)"
+onchange="data['${date}'][${i}].arr[${j}].w=this.value;save()"
 style="width:70px;">
 кг
 <button onclick="doneSet(${i},${j},${j===e.arr.length-1})">✔</button>
@@ -381,7 +386,15 @@ style="width:70px;">
 `).join("");
 
 list.innerHTML+=`
-<div class="card exercise">
+<div class="card exercise"
+draggable="true"
+data-index="${i}"
+ondragstart="dragStart(event)"
+ondragover="dragOver(event)"
+ondrop="drop(event)"
+ondragend="dragEnd(event)"
+style="cursor:grab;"
+>
 
 <b>${e.name}</b>
 
@@ -395,18 +408,16 @@ ${sets}
 
 /* INIT */
 (()=>{
+
 let today=new Date().toISOString().split("T")[0];
 date=today;
+
 document.getElementById("date").value=today;
+
 render();
-updateDateInfo();
+
 })();
 
-</script>
-  <script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js');
-}
 </script>
 
 </body>
