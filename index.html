@@ -6,9 +6,8 @@
 <title>Pro-Fit Tracker AI FULL+</title>
 
 <style>
-/* Основна палітра: темний фон та приглушений синій */
 :root {
-    --accent: #3b82f6; /* Новий, менш контрастний синій */
+    --accent: #3b82f6; 
     --accent-hover: #2563eb;
     --bg: #0b0f1a;
     --card-bg: #111827;
@@ -77,6 +76,13 @@ padding:8px;
 margin-top:8px;
 background: var(--bg);
 border-radius:10px;
+gap: 10px;
+}
+
+.set-inputs {
+    display: flex;
+    align-items: center;
+    gap: 5px;
 }
 
 .set input {
@@ -84,9 +90,18 @@ border-radius:10px;
     background: #1e293b;
     text-align: center;
     border: none;
-    margin: 0 5px;
-    padding: 5px;
+    margin: 0;
+    padding: 8px 5px;
     border-radius: 6px;
+}
+
+/* Кнопка Виконано - Ширша версія */
+.done-btn {
+    width: 60px !important; 
+    margin: 0 !important;
+    padding: 8px !important;
+    font-size: 16px !important;
+    flex-shrink: 0;
 }
 
 .set.done{
@@ -187,7 +202,7 @@ font-weight: 500;
 
 <div class="card">
     <h3 style="margin-top:0">➕ Додати вправу</h3>
-    <input id="name" placeholder="Назва вправи (напр. Жим лежачи)">
+    <input id="name" placeholder="Назва вправи">
     <div style="display:flex; gap:8px;">
         <input id="sets" type="number" placeholder="Підходи">
         <input id="reps" type="number" placeholder="Повтори">
@@ -277,7 +292,6 @@ function add(){
     n.value=""; s.value=""; r.value=""; w.value="";
 }
 
-/* DRAG & DROP */
 function drag(ev, index) { draggedItemIndex = index; ev.dataTransfer.setData("text", index); }
 function allowDrop(ev) { ev.preventDefault(); }
 function drop(ev, targetIndex) {
@@ -348,7 +362,6 @@ function finish(){
     document.getElementById("modal").style.display="flex";
 }
 
-/* ПОКРАЩЕНА ЛОГІКА AI */
 function getAI(){
     let rpe = +document.getElementById("q1").value;
     let fail = document.getElementById("q2").value;
@@ -383,12 +396,13 @@ function render(){
     data[date].forEach((e,i)=>{
         let setsHTML=e.arr.map((s,j)=>`
         <div class="set ${done[i+"-"+j]?'done':''}">
-            <div>
+            <div class="set-inputs">
                 <input type="number" value="${s.r}" onchange="updateReps(${i},${j},this.value)"> 
-                x 
-                <input type="number" value="${s.w}" onchange="updateWeight(${i},${j},this.value)"> кг
+                <span>x</span> 
+                <input type="number" value="${s.w}" onchange="updateWeight(${i},${j},this.value)"> 
+                <span style="font-size: 12px; opacity: 0.7;">кг</span>
             </div>
-            <button onclick="doneSet(${i},${j},${j===e.arr.length-1})" style="width:40px; margin:0; padding:5px;">✔</button>
+            <button class="done-btn" onclick="doneSet(${i},${j},${j===e.arr.length-1})">✔</button>
         </div>
         `).join("");
 
