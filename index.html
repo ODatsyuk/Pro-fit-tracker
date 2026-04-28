@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Pro-Fit Tracker | Pro Edition</title>
+<title>Pro-Fit Tracker | Ultimate Analytics</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
@@ -17,75 +17,33 @@
 }
 
 body { margin:0; font-family: 'Inter', sans-serif; background: var(--bg); color:white; padding-bottom: 80px; }
-
 .header { padding:20px; text-align:center; font-size:22px; font-weight:800; color: var(--accent); letter-spacing: 1px; }
-
 .container { padding:15px; max-width: 600px; margin: 0 auto; }
+.card { background: var(--card-bg); padding:20px; border-radius:20px; margin-bottom:15px; border: 1px solid rgba(255,255,255,0.05); }
 
-.card {
-    background: var(--card-bg);
-    padding:20px;
-    border-radius:20px;
-    margin-bottom:15px;
-    border: 1px solid rgba(255,255,255,0.05);
-}
-
-input, select, button {
-    width:100%; padding:12px; margin-top:10px; border-radius:12px; border:none; outline: none; box-sizing: border-box; font-size: 15px;
-}
-
+input, select, button { width:100%; padding:12px; margin-top:10px; border-radius:12px; border:none; outline: none; box-sizing: border-box; font-size: 15px; }
 input, select { background: var(--input-bg); color:white; border: 1px solid #1e293b; }
-
 button { background: var(--accent); color: white; font-weight: 700; cursor: pointer; transition: 0.2s; }
 button:active { transform: scale(0.98); }
 
-.exercise {
-    background: var(--input-bg);
-    padding:15px;
-    border-radius:16px;
-    margin-top:12px;
-    border: 1px solid #1e293b;
-    position: relative;
-}
-
-.drag-handle {
-    cursor: grab;
-    padding: 5px;
-    color: var(--accent);
-    font-size: 20px;
-    user-select: none;
-}
-
-.set {
-    display:flex; align-items:center; justify-content:space-between;
-    padding:8px; margin-top:8px; background: rgba(255,255,255,0.03); border-radius:10px;
-}
-
+.exercise { background: var(--input-bg); padding:15px; border-radius:16px; margin-top:12px; border: 1px solid #1e293b; position: relative; }
+.drag-handle { cursor: grab; padding: 5px; color: var(--accent); font-size: 20px; user-select: none; }
+.set { display:flex; align-items:center; justify-content:space-between; padding:8px; margin-top:8px; background: rgba(255,255,255,0.03); border-radius:10px; }
 .set-inputs { display: flex; gap: 5px; align-items: center; }
 .set input { width: 55px; padding: 6px; background: #1e293b; border: none; text-align: center; margin: 0;}
-
 .done-btn { width: 60px !important; margin: 0 !important; background: #1e293b; color: white; }
 .set.done { opacity: 0.4; text-decoration: line-through; }
 .set.done .done-btn { background: var(--success); color: white; }
 
-.timer-float {
-    position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%);
-    background: var(--accent); padding: 12px 25px; border-radius: 50px;
-    display: flex; gap: 20px; z-index: 1000; font-weight: bold; box-shadow: 0 5px 20px rgba(0,0,0,0.5);
-}
-
-.modal {
-    position:fixed; inset:0; background: rgba(0,0,0,0.9); display:none; align-items:center; justify-content:center; z-index: 2000;
-}
-
-.modal-content { background: var(--card-bg); padding:25px; border-radius:24px; width:90%; max-width: 400px; overflow-y: auto; max-height: 80vh; }
-
+.timer-float { position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); background: var(--accent); padding: 12px 25px; border-radius: 50px; display: flex; gap: 20px; z-index: 1000; font-weight: bold; box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
+.modal { position:fixed; inset:0; background: rgba(0,0,0,0.9); display:none; align-items:center; justify-content:center; z-index: 2000; }
+.modal-content { background: var(--card-bg); padding:25px; border-radius:24px; width:90%; max-width: 450px; overflow-y: auto; max-height: 85vh; }
 #chartBox { height: 220px; margin-top: 10px; }
+.comp-item { padding: 10px; border-bottom: 1px solid #1e293b; font-size: 14px; }
 </style>
 </head>
 
 <body>
-
 <div class="header">PRO-FIT TRACKER</div>
 
 <div class="timer-float" id="floater" style="display:none;">
@@ -94,7 +52,6 @@ button:active { transform: scale(0.98); }
 </div>
 
 <div class="container">
-
     <div class="card">
         <input type="date" id="date">
     </div>
@@ -113,11 +70,7 @@ button:active { transform: scale(0.98); }
         <h3 style="margin-top:0">➕ Додати вправу</h3>
         <input id="name" list="popular-exercises" placeholder="Назва вправи">
         <datalist id="popular-exercises">
-            <option value="Жим лежачи">
-            <option value="Присідання зі штангою">
-            <option value="Станова тяга">
-            <option value="Підтягування">
-            <option value="Армійський жим">
+            <option value="Жим лежачи"><option value="Присідання зі штангою"><option value="Станова тяга"><option value="Підтягування"><option value="Армійський жим">
         </datalist>
         <div style="display:flex; gap:8px;">
             <input id="sets" type="number" placeholder="Підходи">
@@ -143,7 +96,7 @@ button:active { transform: scale(0.98); }
     <div class="card" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
         <button onclick="start()" style="background: var(--success)">▶ СТАРТ</button>
         <button onclick="finish()" style="background: #6366f1">🏁 ФІНІШ</button>
-        <button onclick="showHistory()" style="background: #f59e0b; grid-column: span 2;">📊 ІСТОРІЯ ТА АНАЛІЗ</button>
+        <button onclick="showHistory()" style="background: #f59e0b; grid-column: span 2;">📊 ПОРІВНЯННЯ ТА ІСТОРІЯ</button>
         <button onclick="copyDay()">📋 КОПІЯ</button>
         <button onclick="pasteDay()">📥 ВСТАВИТИ</button>
     </div>
@@ -155,15 +108,21 @@ button:active { transform: scale(0.98); }
     <div class="modal-content">
         <h2 id="modalTitle" style="margin:0">🧠 Аналіз</h2>
         <div id="modalBody">
-            <div style="font-size:12px; opacity:0.7; margin-top:15px;">Важкість (1-10):</div>
-            <input id="q1" type="number" value="7" min="1" max="10">
-            <div style="font-size:12px; opacity:0.7; margin-top:10px;">Стан енергії:</div>
-            <select id="aiEnergy">
-                <option value="high">Енергійний</option>
-                <option value="mid">Втомлений</option>
-                <option value="low">Виснажений</option>
-            </select>
-            <button onclick="getAI()" style="margin-top:20px;">ОТРИМАТИ ПОРАДУ</button>
+            <div id="compSelectors" style="display:none; margin-top:15px;">
+                <div style="font-size:11px; opacity:0.6">ДЕНЬ А (ЩО ПОРІВНЮЄМО)</div>
+                <select id="dateA"></select>
+                <div style="font-size:11px; opacity:0.6; margin-top:10px;">ДЕНЬ Б (З ЧИМ ПОРІВНЮЄМО)</div>
+                <select id="dateB"></select>
+                <button onclick="runComparison()" style="background:#f59e0b; margin-top:10px;">ПОРІВНЯТИ ВПРАВИ</button>
+            </div>
+            
+            <div id="aiInputs">
+                <div style="font-size:12px; opacity:0.7; margin-top:15px;">Важкість (1-10):</div>
+                <input id="q1" type="number" value="7" min="1" max="10">
+                <div style="font-size:12px; opacity:0.7; margin-top:10px;">Стан енергії:</div>
+                <select id="aiEnergy"><option value="high">Енергійний</option><option value="mid">Втомлений</option><option value="low">Виснажений</option></select>
+                <button onclick="getAI()" style="margin-top:20px;">ОТРИМАТИ ПОРАДУ</button>
+            </div>
         </div>
         <div id="result" style="margin-top:15px; color: #93c5fd; font-size: 14px; line-height: 1.4;"></div>
         <button onclick="closeAI()" style="background:#374151; margin-top:10px;">ЗАКРИТИ</button>
@@ -257,10 +216,8 @@ function render() {
     if(!data[date]) return;
 
     data[date].forEach((e, i) => {
-        let setsHTML = e.arr.map((s, j) => {
-            let isDone = done[i+"-"+j];
-            return `
-            <div class="set ${isDone ? 'done' : ''}">
+        let setsHTML = e.arr.map((s, j) => `
+            <div class="set ${done[i+"-"+j]?'done':''}">
                 <div class="set-inputs">
                     <input type="number" value="${s.r}" onchange="edit(${i},${j},'r',this.value)"> 
                     <small>×</small>
@@ -268,8 +225,7 @@ function render() {
                     <small>кг</small>
                 </div>
                 <button class="done-btn" onclick="doneSet(${i},${j})">✔</button>
-            </div>`;
-        }).join("");
+            </div>`).join("");
 
         let div = document.createElement("div");
         div.className = "exercise";
@@ -277,15 +233,7 @@ function render() {
         div.ondragstart = () => onDragStart(i);
         div.ondragover = (ev) => onDragOver(ev);
         div.ondrop = () => onDrop(i);
-        
-        div.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <div class="drag-handle">☰</div>
-                <b style="flex-grow:1; margin-left:10px;">${e.name}</b>
-                <button onclick="delEx(${i})" style="width:30px; background:none; color:var(--danger); padding:0; margin:0;">✕</button>
-            </div>
-            ${setsHTML}
-        `;
+        div.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center;"><div class="drag-handle">☰</div><b style="flex-grow:1; margin-left:10px;">${e.name}</b><button onclick="delEx(${i})" style="width:30px; background:none; color:var(--danger); padding:0; margin:0;">✕</button></div>${setsHTML}`;
         listEl.appendChild(div);
     });
 }
@@ -293,17 +241,11 @@ function render() {
 function doneSet(i, j) {
     let key = i + "-" + j;
     done[key] = !done[key];
-    
     if(done[key]) {
-        let currentExercise = data[date][i];
-        let isLastSet = (j === currentExercise.arr.length - 1);
-        let isLastExercise = (i === data[date].length - 1);
-
-        // НЕ запускати таймер, якщо це останній підхід ОСТАННЬОЇ вправи
-        if (!(isLastSet && isLastExercise)) {
-            let sVal = +document.getElementById("restSetVal").value;
-            let eVal = +document.getElementById("restExVal").value;
-            showRest(isLastSet ? eVal : sVal);
+        let isLastSet = (j === data[date][i].arr.length - 1);
+        let isLastEx = (i === data[date].length - 1);
+        if (!(isLastSet && isLastEx)) {
+            showRest(isLastSet ? +document.getElementById("restExVal").value : +document.getElementById("restSetVal").value);
         }
     }
     render();
@@ -314,12 +256,7 @@ function showRest(sec) {
     document.getElementById("restT").style.color = "white";
     restInt = setInterval(() => {
         document.getElementById("restT").innerText = `⏳ ${t}s`;
-        if(t-- <= 0) { 
-            clearInterval(restInt); 
-            beep.play(); 
-            document.getElementById("restT").innerText = "⏳ Готово!"; 
-            document.getElementById("restT").style.color = "#10b981";
-        }
+        if(t-- <= 0) { clearInterval(restInt); beep.play(); document.getElementById("restT").innerText = "⏳ Готово!"; document.getElementById("restT").style.color = "#10b981"; }
     }, 1000);
 }
 
@@ -327,8 +264,7 @@ function edit(exI, setI, prop, val) { data[date][exI].arr[setI][prop] = +val; sa
 function delEx(i) { data[date].splice(i,1); save(); updateUI(); }
 
 function start() {
-    startTime = new Date();
-    document.getElementById("floater").style.display = "flex";
+    startTime = new Date(); document.getElementById("floater").style.display = "flex";
     clearInterval(mainInt);
     mainInt = setInterval(() => {
         let diff = Math.floor((new Date() - startTime)/1000);
@@ -340,53 +276,53 @@ function start() {
 function finish() { 
     clearInterval(mainInt); 
     document.getElementById("modalTitle").innerText = "🏁 Тренування завершено";
-    document.getElementById("modalBody").style.display = "block";
+    document.getElementById("compSelectors").style.display = "none";
+    document.getElementById("aiInputs").style.display = "block";
     document.getElementById("result").innerHTML = "";
     document.getElementById("modal").style.display="flex"; 
 }
 
 function showHistory() {
-    document.getElementById("modalTitle").innerText = "📊 Аналіз історії";
-    document.getElementById("modalBody").style.display = "none";
+    document.getElementById("modalTitle").innerText = "📊 Порівняння днів";
+    document.getElementById("aiInputs").style.display = "none";
+    document.getElementById("compSelectors").style.display = "block";
     
-    let sortedDates = Object.keys(data).sort();
-    if(sortedDates.length < 2) {
-        document.getElementById("result").innerHTML = "Для аналізу потрібно хоча б 2 тренування в історії.";
-    } else {
-        let lastDate = sortedDates[sortedDates.length - 1];
-        let prevDate = sortedDates[sortedDates.length - 2];
-        
-        let lastTotal = 0, prevTotal = 0;
-        data[lastDate].forEach(ex => ex.arr.forEach(s => lastTotal += (s.w * s.r)));
-        data[prevDate].forEach(ex => ex.arr.forEach(s => prevTotal += (s.w * s.r)));
-
-        let diff = lastTotal - prevTotal;
-        let trend = diff >= 0 ? `<span style="color:var(--success)">📈 +${diff}кг</span>` : `<span style="color:var(--danger)">📉 ${diff}кг</span>`;
-        
-        document.getElementById("result").innerHTML = `
-            <b>Останнє (${lastDate}):</b> ${lastTotal} кг об'єму<br>
-            <b>Попереднє (${prevDate}):</b> ${prevTotal} кг об'єму<br>
-            <b>Динаміка:</b> ${trend}<br><br>
-            <i>Порада: ${diff > 0 ? "Чудовий прогрес! Тримайте темп." : "Об'єм впав. Можливо, варто змінити стратегію відпочинку."}</i>
-        `;
-    }
+    let dates = Object.keys(data).sort().reverse();
+    let sA = document.getElementById("dateA"), sB = document.getElementById("dateB");
+    sA.innerHTML = dates.map(d => `<option value="${d}">${d}</option>`).join("");
+    sB.innerHTML = dates.map(d => `<option value="${d}">${d}</option>`).join("");
+    if(dates.length > 1) sB.selectedIndex = 1;
+    
+    document.getElementById("result").innerHTML = "Виберіть дати для детального порівняння вправ.";
     document.getElementById("modal").style.display = "flex";
 }
 
-function closeAI() { document.getElementById("modal").style.display="none"; }
+function runComparison() {
+    let dA = document.getElementById("dateA").value, dB = document.getElementById("dateB").value;
+    if(dA === dB) { document.getElementById("result").innerHTML = "Виберіть різні дати."; return; }
+    
+    let html = `<b>Порівняння ${dA} vs ${dB}:</b><br><br>`;
+    let common = 0;
+    
+    data[dA].forEach(exA => {
+        let exB = data[dB].find(e => e.name === exA.name);
+        if(exB) {
+            common++;
+            let maxA = Math.max(...exA.arr.map(s => s.w)), maxB = Math.max(...exB.arr.map(s => s.w));
+            let diff = maxA - maxB;
+            let diffText = diff > 0 ? `<span style="color:var(--success)">+${diff}кг</span>` : (diff < 0 ? `<span style="color:var(--danger)">${diff}кг</span>` : "без змін");
+            html += `<div class="comp-item">🔹 <b>${exA.name}</b>: ${maxA}кг (${diffText} відносно ${dB})</div>`;
+        }
+    });
+    
+    if(common === 0) html += "Спільних вправ не знайдено. Мабуть, це були різні групи м'язів!";
+    document.getElementById("result").innerHTML = html;
+}
 
+function closeAI() { document.getElementById("modal").style.display="none"; }
 function getAI() {
     let rpe = +document.getElementById("q1").value;
-    let energy = document.getElementById("aiEnergy").value;
-    let msg = "";
-
-    if (rpe >= 9) {
-        msg = "⚠️ <b>Високий RPE.</b> Тіло виснажене. Наступне тренування зробіть з вагою на 20% менше для відновлення ЦНС.";
-    } else if (rpe <= 6 && energy === "high") {
-        msg = "🚀 <b>Потенціал!</b> Наступного разу додайте +2.5кг або зробіть на 1 підхід більше у базових вправах.";
-    } else {
-        msg = "✅ <b>Стабільна робота.</b> Ви в правильній зоні навантаження для гіпертрофії.";
-    }
+    let msg = rpe >= 9 ? "⚠️ <b>На межі.</b> Наступного разу знизьте вагу." : "✅ <b>Чудово.</b> Ви в зоні росту.";
     document.getElementById("result").innerHTML = msg;
 }
 
