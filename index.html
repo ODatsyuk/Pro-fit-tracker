@@ -64,7 +64,7 @@ button:active { transform: scale(0.98); }
 .set-inputs { display: flex; gap: 5px; align-items: center; }
 .set input { width: 55px; padding: 6px; background: #1e293b; border: none; text-align: center; margin: 0;}
 
-.done-btn { width: 60px !important; margin: 0 !important; background: #1e293b; color: white; transition: background 0.3s; }
+.done-btn { width: 60px !important; margin: 0 !important; background: #1e293b; color: white; }
 .set.done { opacity: 0.4; text-decoration: line-through; }
 .set.done .done-btn { background: var(--success); color: white; }
 
@@ -78,7 +78,7 @@ button:active { transform: scale(0.98); }
     position:fixed; inset:0; background: rgba(0,0,0,0.9); display:none; align-items:center; justify-content:center; z-index: 2000;
 }
 
-.modal-content { background: var(--card-bg); padding:25px; border-radius:24px; width:90%; max-width: 400px; }
+.modal-content { background: var(--card-bg); padding:25px; border-radius:24px; width:90%; max-width: 400px; overflow-y: auto; max-height: 80vh; }
 
 #chartBox { height: 220px; margin-top: 10px; }
 </style>
@@ -143,6 +143,7 @@ button:active { transform: scale(0.98); }
     <div class="card" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
         <button onclick="start()" style="background: var(--success)">▶ СТАРТ</button>
         <button onclick="finish()" style="background: #6366f1">🏁 ФІНІШ</button>
+        <button onclick="showHistory()" style="background: #f59e0b; grid-column: span 2;">📊 ІСТОРІЯ ТА АНАЛІЗ</button>
         <button onclick="copyDay()">📋 КОПІЯ</button>
         <button onclick="pasteDay()">📥 ВСТАВИТИ</button>
     </div>
@@ -152,18 +153,18 @@ button:active { transform: scale(0.98); }
 
 <div class="modal" id="modal">
     <div class="modal-content">
-        <h2 style="margin:0">🧠 Розумний ШІ Аналіз</h2>
-        <div style="font-size:12px; opacity:0.7; margin-top:15px;">Важкість тренування (1-10):</div>
-        <input id="q1" type="number" value="7" min="1" max="10">
-        
-        <div style="font-size:12px; opacity:0.7; margin-top:10px;">Стан енергії:</div>
-        <select id="aiEnergy">
-            <option value="high">Енергійний</option>
-            <option value="mid">Втомлений</option>
-            <option value="low">Виснажений</option>
-        </select>
-
-        <button onclick="getAI()" style="margin-top:20px;">АНАЛІЗУВАТИ ТРЕНУВАННЯ</button>
+        <h2 id="modalTitle" style="margin:0">🧠 Аналіз</h2>
+        <div id="modalBody">
+            <div style="font-size:12px; opacity:0.7; margin-top:15px;">Важкість (1-10):</div>
+            <input id="q1" type="number" value="7" min="1" max="10">
+            <div style="font-size:12px; opacity:0.7; margin-top:10px;">Стан енергії:</div>
+            <select id="aiEnergy">
+                <option value="high">Енергійний</option>
+                <option value="mid">Втомлений</option>
+                <option value="low">Виснажений</option>
+            </select>
+            <button onclick="getAI()" style="margin-top:20px;">ОТРИМАТИ ПОРАДУ</button>
+        </div>
         <div id="result" style="margin-top:15px; color: #93c5fd; font-size: 14px; line-height: 1.4;"></div>
         <button onclick="closeAI()" style="background:#374151; margin-top:10px;">ЗАКРИТИ</button>
     </div>
@@ -230,7 +231,7 @@ function onDrop(idx) {
 function updateChart() {
     const ctx = document.getElementById('myChart').getContext('2d');
     const selectedEx = document.getElementById("chartExSelect").value;
-    if(!selectedEx) return;
+    if(!selectedEx || !ctx) return;
     let labels = [], weights = [];
     Object.keys(data).sort().forEach(d => {
         let dayEx = data[d].find(ex => ex.name === selectedEx);
@@ -266,7 +267,7 @@ function render() {
                     <input type="number" value="${s.w}" onchange="edit(${i},${j},'w',this.value)"> 
                     <small>кг</small>
                 </div>
-                <button class="done-btn" onclick="doneSet(${i},${j},${j===e.arr.length-1})">✔</button>
+                <button class="done-btn" onclick="doneSet(${i},${j})">✔</button>
             </div>`;
         }).join("");
 
@@ -289,13 +290,21 @@ function render() {
     });
 }
 
-function doneSet(i, j, last) {
+function doneSet(i, j) {
     let key = i + "-" + j;
     done[key] = !done[key];
+    
     if(done[key]) {
-        let sVal = +document.getElementById("restSetVal").value;
-        let eVal = +document.getElementById("restExVal").value;
-        showRest(last ? eVal : sVal);
+        let currentExercise = data[date][i];
+        let isLastSet = (j === currentExercise.arr.length - 1);
+        let isLastExercise = (i === data[date].length - 1);
+
+        // НЕ запускати таймер, якщо це останній підхід ОСТАННЬОЇ вправи
+        if (!(isLastSet && isLastExercise)) {
+            let sVal = +document.getElementById("restSetVal").value;
+            let eVal = +document.getElementById("restExVal").value;
+            showRest(isLastSet ? eVal : sVal);
+        }
     }
     render();
 }
@@ -328,29 +337,60 @@ function start() {
     }, 1000);
 }
 
-function finish() { clearInterval(mainInt); document.getElementById("modal").style.display="flex"; }
+function finish() { 
+    clearInterval(mainInt); 
+    document.getElementById("modalTitle").innerText = "🏁 Тренування завершено";
+    document.getElementById("modalBody").style.display = "block";
+    document.getElementById("result").innerHTML = "";
+    document.getElementById("modal").style.display="flex"; 
+}
+
+function showHistory() {
+    document.getElementById("modalTitle").innerText = "📊 Аналіз історії";
+    document.getElementById("modalBody").style.display = "none";
+    
+    let sortedDates = Object.keys(data).sort();
+    if(sortedDates.length < 2) {
+        document.getElementById("result").innerHTML = "Для аналізу потрібно хоча б 2 тренування в історії.";
+    } else {
+        let lastDate = sortedDates[sortedDates.length - 1];
+        let prevDate = sortedDates[sortedDates.length - 2];
+        
+        let lastTotal = 0, prevTotal = 0;
+        data[lastDate].forEach(ex => ex.arr.forEach(s => lastTotal += (s.w * s.r)));
+        data[prevDate].forEach(ex => ex.arr.forEach(s => prevTotal += (s.w * s.r)));
+
+        let diff = lastTotal - prevTotal;
+        let trend = diff >= 0 ? `<span style="color:var(--success)">📈 +${diff}кг</span>` : `<span style="color:var(--danger)">📉 ${diff}кг</span>`;
+        
+        document.getElementById("result").innerHTML = `
+            <b>Останнє (${lastDate}):</b> ${lastTotal} кг об'єму<br>
+            <b>Попереднє (${prevDate}):</b> ${prevTotal} кг об'єму<br>
+            <b>Динаміка:</b> ${trend}<br><br>
+            <i>Порада: ${diff > 0 ? "Чудовий прогрес! Тримайте темп." : "Об'єм впав. Можливо, варто змінити стратегію відпочинку."}</i>
+        `;
+    }
+    document.getElementById("modal").style.display = "flex";
+}
+
 function closeAI() { document.getElementById("modal").style.display="none"; }
 
 function getAI() {
     let rpe = +document.getElementById("q1").value;
     let energy = document.getElementById("aiEnergy").value;
-    let selectedEx = document.getElementById("chartExSelect").value;
     let msg = "";
 
     if (rpe >= 9) {
-        msg = "⚠️ <b>Високий рівень навантаження.</b> Ваше тіло на межі. Рекомендую зробити наступне тренування легшим (deload) або збільшити час відпочинку між сетами.";
+        msg = "⚠️ <b>Високий RPE.</b> Тіло виснажене. Наступне тренування зробіть з вагою на 20% менше для відновлення ЦНС.";
     } else if (rpe <= 6 && energy === "high") {
-        msg = "🚀 <b>Потенціал для росту!</b> Тренування пройшло легко. Наступного разу спробуйте додати +2.5 кг у основних вправах або зробити на 1-2 повторення більше.";
-    } else if (energy === "low") {
-        msg = "💤 <b>Пріоритет на відновлення.</b> Ви виснажені. Сьогодні ви молодець, що потренувалися, але зверніть увагу на сон та харчування.";
+        msg = "🚀 <b>Потенціал!</b> Наступного разу додайте +2.5кг або зробіть на 1 підхід більше у базових вправах.";
     } else {
-        msg = "✅ <b>Ідеальний баланс.</b> Ви працюєте в продуктивній зоні. Продовжуйте в тому ж темпі ще 2 тренування, перш ніж підвищувати вагу.";
+        msg = "✅ <b>Стабільна робота.</b> Ви в правильній зоні навантаження для гіпертрофії.";
     }
-    
     document.getElementById("result").innerHTML = msg;
 }
 
-function copyDay() { localStorage.setItem("copy", JSON.stringify(data[date])); alert("День скопійовано!"); }
+function copyDay() { localStorage.setItem("copy", JSON.stringify(data[date])); alert("Скопійовано!"); }
 function pasteDay() { let c = localStorage.getItem("copy"); if(c) { data[date]=JSON.parse(c); save(); updateUI(); } }
 
 (()=>{
