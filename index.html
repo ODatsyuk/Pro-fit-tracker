@@ -3,8 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Pro-Fit Tracker | Elite Edition</title>
+<title>Pro-Fit Tracker | Elite PDF Edition</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Бібліотека для PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
 :root {
@@ -29,7 +31,6 @@ button { background: var(--accent); color: white; font-weight: 700; cursor: poin
 button:active { transform: scale(0.98); }
 
 .exercise { background: var(--input-bg); padding:15px; border-radius:16px; margin-top:12px; border: 1px solid #1e293b; position: relative; }
-.drag-handle { cursor: grab; padding: 5px; color: var(--accent); font-size: 20px; user-select: none; }
 .set { display:flex; align-items:center; justify-content:space-between; padding:8px; margin-top:8px; background: rgba(255,255,255,0.03); border-radius:10px; }
 .set-inputs { display: flex; gap: 5px; align-items: center; }
 .set input { width: 55px; padding: 6px; background: #1e293b; border: none; text-align: center; margin: 0;}
@@ -41,8 +42,9 @@ button:active { transform: scale(0.98); }
 .modal { position:fixed; inset:0; background: rgba(0,0,0,0.9); display:none; align-items:center; justify-content:center; z-index: 2000; }
 .modal-content { background: var(--card-bg); padding:25px; border-radius:24px; width:90%; max-width: 450px; overflow-y: auto; max-height: 85vh; }
 #chartBox { height: 200px; margin-top: 10px; }
-.comp-item { padding: 10px; border-bottom: 1px solid #1e293b; font-size: 14px; }
 .info-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--warning); margin-bottom: 5px; }
+
+.split-btn { flex: 1; background: #1e293b; font-size: 11px; padding: 8px; border: 1px solid var(--accent); color: var(--accent); }
 </style>
 </head>
 
@@ -57,7 +59,7 @@ button:active { transform: scale(0.98); }
 <div class="container">
     <div class="card">
         <input type="date" id="date">
-        <textarea id="dayNotes" placeholder="Нотатки до сьогоднішнього тренування..." onchange="saveNotes()"></textarea>
+        <textarea id="dayNotes" placeholder="Нотатки до тренування..." onchange="saveNotes()"></textarea>
     </div>
 
     <div class="card">
@@ -75,10 +77,19 @@ button:active { transform: scale(0.98); }
     </div>
 
     <div class="card">
+        <h3 style="margin-top:0; font-size:14px; color:var(--accent);">⚡ Швидкі шаблони (Спліти)</h3>
+        <div style="display:flex; gap:5px;">
+            <button class="split-btn" onclick="applySplit('push')">PUSH (Жим)</button>
+            <button class="split-btn" onclick="applySplit('pull')">PULL (Тяга)</button>
+            <button class="split-btn" onclick="applySplit('legs')">LEGS (Ноги)</button>
+        </div>
+    </div>
+
+    <div class="card">
         <h3 style="margin-top:0">➕ Додати вправу</h3>
         <input id="name" list="popular-exercises" placeholder="Назва вправи">
         <datalist id="popular-exercises">
-            <option value="Жим лежачи"><option value="Присідання"><option value="Станова тяга"><option value="Підтягування"><option value="Армійський жим">
+            <option value="Жим лежачи"><option value="Присідання"><option value="Станова тяга"><option value="Підтягування"><option value="Армійський жим"><option value="Бруси"><option value="Тяга в нахилі">
         </datalist>
         <div style="display:flex; gap:8px;">
             <input id="sets" type="number" placeholder="Сети">
@@ -94,7 +105,7 @@ button:active { transform: scale(0.98); }
         <button onclick="showHistory()" style="background: var(--warning); grid-column: span 2;">📊 ПОРІВНЯННЯ ТА ІСТОРІЯ</button>
         <button onclick="copyDay()">📋 КОПІЯ</button>
         <button onclick="pasteDay()">📥 ВСТАВИТИ</button>
-        <button onclick="exportData()" style="background: #4b5563; grid-column: span 2; font-size: 12px; padding: 8px;">💾 ЕКСПОРТ ДАНИХ (JSON)</button>
+        <button onclick="generatePDF()" style="background: #ef4444; grid-column: span 2;">📄 ЕКСПОРТ ВСІЄЇ ІСТОРІЇ В PDF</button>
     </div>
 
     <div id="list"></div>
@@ -102,21 +113,9 @@ button:active { transform: scale(0.98); }
 
 <div class="modal" id="modal">
     <div class="modal-content">
-        <h2 id="modalTitle" style="margin:0">🧠 Аналіз</h2>
-        <div id="modalBody">
-            <div id="compSelectors" style="display:none; margin-top:15px;">
-                <select id="dateA"></select>
-                <select id="dateB"></select>
-                <button onclick="runComparison()" style="background:var(--warning);">ПОРІВНЯТИ</button>
-            </div>
-            <div id="aiInputs">
-                <input id="q1" type="number" value="7" min="1" max="10" placeholder="Важкість">
-                <select id="aiEnergy"><option value="high">Енергійний</option><option value="mid">Втомлений</option><option value="low">Виснажений</option></select>
-                <button onclick="getAI()">ОТРИМАТИ ПОРАДУ</button>
-            </div>
-        </div>
-        <div id="result" style="margin-top:15px; color: #93c5fd; font-size: 14px;"></div>
-        <button onclick="closeAI()" style="background:#374151;">ЗАКРИТИ</button>
+        <h2 id="modalTitle" style="margin:0">🏁 Тренування закінчено</h2>
+        <div id="result" style="margin-top:15px; color: #93c5fd; font-size: 16px;"></div>
+        <button onclick="closeModal()" style="background:#374151; margin-top:20px;">ЗАКРИТИ</button>
     </div>
 </div>
 
@@ -170,15 +169,35 @@ function fillChartSelect() {
     select.value = currentVal;
 }
 
-function add() {
-    let n = document.getElementById("name"), s = document.getElementById("sets"), r = document.getElementById("reps"), w = document.getElementById("weight");
-    if(!date || !n.value || !s.value) return;
+function add(customName, customS, customR, customW) {
+    let n = customName || document.getElementById("name").value;
+    let s = customS || document.getElementById("sets").value;
+    let r = customR || document.getElementById("reps").value;
+    let w = customW || document.getElementById("weight").value;
+    
+    if(!date || !n || !s) return;
     if(!data[date]) data[date] = [];
     let arr = [];
-    for(let i=0; i<+s.value; i++) arr.push({r: +r.value || 0, w: +w.value || 0});
-    data[date].push({name: n.value, arr});
+    for(let i=0; i<+s; i++) arr.push({r: +r || 0, w: +w || 0});
+    data[date].push({name: n, arr});
     save(); updateUI();
-    n.value=""; s.value=""; r.value=""; w.value="";
+    
+    if(!customName) {
+        document.getElementById("name").value = "";
+        document.getElementById("sets").value = "";
+        document.getElementById("reps").value = "";
+        document.getElementById("weight").value = "";
+    }
+}
+
+// Функція швидких сплітів
+function applySplit(type) {
+    const plans = {
+        push: [['Жим штанги', 3, 10, 0], ['Армійський жим', 3, 10, 0], ['Бруси', 3, 12, 0]],
+        pull: [['Підтягування', 3, 8, 0], ['Тяга в нахилі', 3, 10, 0], ['Біцепс', 3, 12, 0]],
+        legs: [['Присідання', 3, 10, 0], ['Випади', 3, 12, 0], ['Прес', 3, 20, 0]]
+    };
+    plans[type].forEach(ex => add(ex[0], ex[1], ex[2], ex[3]));
 }
 
 function updateChart() {
@@ -194,19 +213,17 @@ function updateChart() {
         if(dayEx) {
             labels.push(d.split("-").slice(1).join("/"));
             let dayMax = Math.max(...dayEx.arr.map(s => s.w));
-            let bestSet = dayEx.arr.reduce((prev, curr) => (prev.w > curr.w) ? prev : curr);
-            // Формула Еплі для 1ПМ
-            let estimated1PM = bestSet.w * (1 + bestSet.r / 30);
+            let bestSet = dayEx.arr.reduce((p, c) => (p.w > c.w) ? p : c);
+            let e1PM = bestSet.w * (1 + bestSet.r / 30);
             
             weights.push(dayMax);
-            onePMs.push(estimated1PM.toFixed(1));
+            onePMs.push(e1PM.toFixed(1));
             if(dayMax > maxEver) maxEver = dayMax;
         }
     });
 
     document.getElementById("prDisplay").innerText = `🏆 PR: ${maxEver} кг`;
-    let latest1PM = onePMs[onePMs.length - 1] || "-";
-    document.getElementById("onePM").innerText = `🎯 1ПМ: ${latest1PM} кг`;
+    document.getElementById("onePM").innerText = `🎯 1ПМ: ${onePMs[onePMs.length-1] || "-"} кг`;
 
     if(myChart) myChart.destroy();
     myChart = new Chart(ctx, {
@@ -214,11 +231,11 @@ function updateChart() {
         data: {
             labels: labels,
             datasets: [
-                { label: 'Робоча вага', data: weights, borderColor: '#3b82f6', tension: 0.3 },
-                { label: '1ПМ (Прогноз)', data: onePMs, borderColor: '#f59e0b', borderDash: [5, 5], tension: 0.3 }
+                { label: 'Max Вага', data: weights, borderColor: '#3b82f6', tension: 0.3 },
+                { label: '1ПМ', data: onePMs, borderColor: '#f59e0b', borderDash: [5, 5], tension: 0.3 }
             ]
         },
-        options: { responsive: true, maintainAspectRatio: false, scales: { y: { grid: { color: '#1e293b' } }, x: { grid: { display: false } } } }
+        options: { responsive: true, maintainAspectRatio: false }
     });
 }
 
@@ -253,7 +270,7 @@ function doneSet(i, j) {
         let isLastSet = (j === data[date][i].arr.length - 1);
         let isLastEx = (i === data[date].length - 1);
         if (!(isLastSet && isLastEx)) {
-            showRest(isLastSet ? +document.getElementById("restExVal").value : +document.getElementById("restSetVal").value);
+            showRest(isLastSet ? 180 : 90);
         }
     }
     render();
@@ -261,10 +278,9 @@ function doneSet(i, j) {
 
 function showRest(sec) {
     let t = sec; clearInterval(restInt);
-    document.getElementById("restT").style.color = "white";
     restInt = setInterval(() => {
         document.getElementById("restT").innerText = `⏳ ${t}s`;
-        if(t-- <= 0) { clearInterval(restInt); beep.play(); document.getElementById("restT").innerText = "⏳ Готово!"; document.getElementById("restT").style.color = "#10b981"; }
+        if(t-- <= 0) { clearInterval(restInt); beep.play(); document.getElementById("restT").innerText = "Готово!"; }
     }, 1000);
 }
 
@@ -276,8 +292,7 @@ function start() {
     clearInterval(mainInt);
     mainInt = setInterval(() => {
         let diff = Math.floor((new Date() - startTime)/1000);
-        let m = Math.floor(diff/60), s = diff%60;
-        currentDuration = `${m}:${s<10?'0':''}${s}`;
+        currentDuration = `${Math.floor(diff/60)}:${(diff%60).toString().padStart(2,'0')}`;
         document.getElementById("mainT").innerText = `⏱ ${currentDuration}`;
     }, 1000);
 }
@@ -286,54 +301,52 @@ function finish() {
     clearInterval(mainInt); 
     durations[date] = currentDuration;
     save();
-    document.getElementById("modalTitle").innerText = "🏁 Результати";
-    document.getElementById("compSelectors").style.display = "none";
-    document.getElementById("aiInputs").style.display = "block";
-    document.getElementById("result").innerHTML = `Час: <b>${currentDuration}</b><br>Нотатки збережено.`;
+    document.getElementById("result").innerText = `Тренування завершено за ${currentDuration}`;
     document.getElementById("modal").style.display="flex"; 
 }
 
-function showHistory() {
-    document.getElementById("modalTitle").innerText = "📊 Історія";
-    document.getElementById("aiInputs").style.display = "none";
-    document.getElementById("compSelectors").style.display = "block";
-    let dts = Object.keys(data).sort().reverse();
-    document.getElementById("dateA").innerHTML = dts.map(d => `<option value="${d}">${d}</option>`).join("");
-    document.getElementById("dateB").innerHTML = dts.map(d => `<option value="${d}">${d}</option>`).join("");
-    if(dts.length > 1) document.getElementById("dateB").selectedIndex = 1;
-    document.getElementById("modal").style.display = "flex";
-}
+// ГЕНЕРАЦІЯ PDF
+async function generatePDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    let y = 20;
 
-function runComparison() {
-    let dA = document.getElementById("dateA").value, dB = document.getElementById("dateB").value;
-    let html = `<b>${dA} (Час: ${durations[dA]||'?'})</b><br><b>${dB} (Час: ${durations[dB]||'?'})</b><br><hr>`;
-    data[dA].forEach(exA => {
-        let exB = data[dB].find(e => e.name === exA.name);
-        if(exB) {
-            let maxA = Math.max(...exA.arr.map(s => s.w)), maxB = Math.max(...exB.arr.map(s => s.w));
-            let d = maxA - maxB;
-            html += `<div>${exA.name}: ${maxA}кг (${d >= 0 ? '+' + d : d})</div>`;
-        }
+    doc.setFontSize(20);
+    doc.text("Pro-Fit Tracker: Звіт про тренування", 20, y);
+    y += 15;
+
+    const sortedDates = Object.keys(data).sort().reverse();
+
+    sortedDates.forEach(d => {
+        if (y > 270) { doc.addPage(); y = 20; }
+        doc.setFontSize(14);
+        doc.setTextColor(59, 130, 246);
+        doc.text(`Дата: ${d} | Час: ${durations[d] || "?"}`, 20, y);
+        y += 7;
+
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        if(notes[d]) { doc.text(`Нотатки: ${notes[d]}`, 20, y); y += 6; }
+
+        data[d].forEach(ex => {
+            doc.setTextColor(0);
+            let setsStr = ex.arr.map(s => `${s.r}x${s.w}kg`).join(", ");
+            doc.text(`• ${ex.name}: ${setsStr}`, 25, y);
+            y += 5;
+            if (y > 280) { doc.addPage(); y = 20; }
+        });
+        y += 10;
     });
-    document.getElementById("result").innerHTML = html;
+
+    doc.save(`ProFit_History_${new Date().toISOString().split('T')[0]}.pdf`);
 }
 
-function exportData() {
-    let exportObj = { data, durations, notes };
-    let blob = new Blob([JSON.stringify(exportObj)], { type: "application/json" });
-    let url = URL.createObjectURL(blob);
-    let a = document.createElement("a");
-    a.href = url; a.download = `profit_data_${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
+function showHistory() {
+    alert("Порівняння доступне в аналітиці графіку та звіті PDF.");
 }
 
-function getAI() {
-    let r = +document.getElementById("q1").value;
-    document.getElementById("result").innerHTML = r >= 9 ? "💪 Висока інтенсивність! Потрібно більше вуглеводів сьогодні." : "👍 Гарна робота, дотримуйтесь плану.";
-}
-
-function closeAI() { document.getElementById("modal").style.display="none"; }
-function copyDay() { localStorage.setItem("copy", JSON.stringify(data[date])); alert("Скопійовано"); }
+function closeModal() { document.getElementById("modal").style.display="none"; }
+function copyDay() { localStorage.setItem("copy", JSON.stringify(data[date])); alert("День скопійовано"); }
 function pasteDay() { let c = localStorage.getItem("copy"); if(c) { data[date]=JSON.parse(c); save(); updateUI(); } }
 
 (()=>{
