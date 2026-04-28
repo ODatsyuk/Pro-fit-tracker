@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Pro-Fit Elite | Video & Pro Library</title>
+<title>Pro-Fit Elite+ | Pro-Video & RPE</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
@@ -14,7 +14,7 @@
     --card-bg: #111827;
     --input-bg: #0f172a;
     --danger: #ef4444;
-    --success: #10b981;
+    --success: #2dd4bf; /* М'який м'ятний колір */
     --warning: #f59e0b;
 }
 
@@ -35,14 +35,17 @@ button:active { transform: scale(0.97); }
 .exercise { background: var(--input-bg); padding:15px; border-radius:16px; margin-top:12px; border: 1px solid #1e293b; position: relative; }
 .set { display:flex; align-items:center; justify-content:space-between; padding:8px; margin-top:8px; background: rgba(255,255,255,0.03); border-radius:10px; }
 .set-inputs { display: flex; gap: 5px; align-items: center; }
-.set input { width: 50px; padding: 6px; background: #1e293b; text-align: center; margin: 0;}
-.done-btn { width: 50px !important; margin: 0 !important; background: #1e293b; font-size: 12px; }
-.set.done { opacity: 0.3; }
-.set.done .done-btn { background: var(--success); }
+.set input { width: 48px; padding: 6px; background: #1e293b; text-align: center; margin: 0;}
+.done-btn { width: 45px !important; margin: 0 !important; background: #1e293b; font-size: 16px; border: 1px solid rgba(255,255,255,0.1); }
+.set.done { opacity: 0.4; }
+.set.done .done-btn { background: var(--success); color: #0b0f1a; border: none; }
 
-.video-btn { background: #f00; color: white; width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 14px; margin-left: 10px; }
+.video-btn { background: #ef4444; color: white; width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 14px; margin-left: 10px; }
 
-.timer-float { position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); background: var(--accent); padding: 12px 25px; border-radius: 50px; display: flex; gap: 15px; z-index: 1000; box-shadow: 0 5px 25px rgba(0,0,0,0.6); }
+.timer-float { position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); background: var(--accent); padding: 12px 25px; border-radius: 50px; display: flex; flex-direction: column; align-items: center; gap: 5px; z-index: 1000; box-shadow: 0 5px 25px rgba(0,0,0,0.6); }
+.timer-btns { display: flex; gap: 10px; margin-top: 5px; }
+.timer-btns button { width: 40px; height: 25px; padding: 0; font-size: 10px; background: rgba(0,0,0,0.3); }
+
 .modal { position:fixed; inset:0; background: rgba(0,0,0,0.9); display:none; align-items:center; justify-content:center; z-index: 2000; }
 .modal-content { background: var(--card-bg); padding:25px; border-radius:24px; width:85%; max-height: 80vh; overflow-y: auto; }
 
@@ -54,11 +57,18 @@ button:active { transform: scale(0.97); }
 </head>
 
 <body>
-<div class="header">PRO-FIT ELITE+</div>
+<div class="header">PRO-FIT ELITE V4</div>
 
 <div class="timer-float" id="floater" style="display:none;">
-    <span id="mainT">⏱ 00:00</span>
-    <span id="restT" style="color: #d1d5db;">⏳ Відпочинок</span>
+    <div style="display:flex; gap:15px; font-weight:bold;">
+        <span id="mainT">⏱ 00:00</span>
+        <span id="restT" style="color: #d1d5db;">⏳ Відпочинок</span>
+    </div>
+    <div class="timer-btns">
+        <button onclick="showRest(60)">60с</button>
+        <button onclick="showRest(120)">120с</button>
+        <button onclick="showRest(180)">180с</button>
+    </div>
 </div>
 
 <div class="container">
@@ -76,7 +86,7 @@ button:active { transform: scale(0.97); }
                 <div class="stat-value" id="topOnePM">0 кг</div>
             </div>
         </div>
-        <textarea id="dayNotes" placeholder="Настрої, заміни вправ, відчуття..." onchange="saveNotes()"></textarea>
+        <textarea id="dayNotes" placeholder="Нотатки: сон, креатин, музика..." onchange="saveNotes()"></textarea>
     </div>
 
     <div class="card">
@@ -95,28 +105,27 @@ button:active { transform: scale(0.97); }
     </div>
 
     <div class="card">
-        <h3 style="margin-top:0">➕ Додати вправу</h3>
+        <h3 style="margin-top:0">➕ Нова вправа</h3>
         <input id="name" list="popular" placeholder="Назва вправи">
         <datalist id="popular">
             <option value="Жим штанги лежачи"><option value="Присідання зі штангою"><option value="Станова тяга"><option value="Підтягування">
             <option value="Віджимання на брусах"><option value="Тяга штанги в нахилі"><option value="Армійський жим"><option value="Випади з гантелями">
-            <option value="Підйом штанги на біцепс"><option value="Французький жим"><option value="Тяга верхнього блоку"><option value="Жим гантелей сидячи">
-            <option value="Розведення гантелей"><option value="Згинання ніг у тренажері"><option value="Розгинання ніг"><option value="Прес (скручування)">
-            <option value="Шраги"><option value="Гіперекстензія"><option value="Тяга гантелі до пояса">
+            <option value="Підйом штанги на біцепс"><option value="Французький жим"><option value="Тяга верхнього блоку"><option value="Жим гантелей">
+            <option value="Розгинання ніг"><option value="Згинання ніг"><option value="Прес скручування"><option value="Гіперекстензія">
         </datalist>
         <div style="display:flex; gap:5px;">
             <input id="sets" type="number" placeholder="Сети">
             <input id="reps" type="number" placeholder="Повт">
             <input id="weight" type="number" placeholder="кг">
         </div>
-        <input id="tempo" placeholder="Темп (напр. 3-0-1-0)" style="margin-top:5px;">
+        <input id="tempo" placeholder="Темп (напр. 3-1-1-0)" style="margin-top:5px;">
         <button onclick="add()">ДОДАТИ В ПЛАН</button>
     </div>
 
     <div class="card" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-        <button onclick="start()" style="background: var(--success)">▶ СТАРТ</button>
+        <button onclick="start()" style="background: var(--success); color:#0b0f1a;">▶ СТАРТ</button>
         <button onclick="finish()" style="background: #6366f1">🏁 ФІНІШ</button>
-        <button onclick="generatePDF()" style="background: var(--danger); grid-column: span 2;">📄 ЕКСПОРТ PDF</button>
+        <button onclick="generatePDF()" style="background: var(--danger); grid-column: span 2;">📄 ЕКСПОРТ PDF ЗВІТУ</button>
         <button onclick="copyDay()">📋 COPY</button>
         <button onclick="pasteDay()">📥 PASTE</button>
     </div>
@@ -126,7 +135,7 @@ button:active { transform: scale(0.97); }
 
 <div class="modal" id="modal">
     <div class="modal-content">
-        <h2 style="margin:0">🏁 Результати</h2>
+        <h2 style="margin:0">🏁 Тренування закінчено!</h2>
         <div id="summaryResult" style="margin:15px 0; font-size:14px; line-height:1.6;"></div>
         <button onclick="document.getElementById('modal').style.display='none'">ЗАКРИТИ</button>
     </div>
@@ -141,6 +150,14 @@ let startTime = null;
 let currentDuration = "00:00";
 let mainInt, restInt, done = {};
 let myChart = null;
+
+const videoLinks = {
+    "Жим штанги лежачи": "https://www.youtube.com/watch?v=tuwHzzSt6pQ",
+    "Присідання зі штангою": "https://www.youtube.com/watch?v=MVMnk0HiTMg",
+    "Станова тяга": "https://www.youtube.com/watch?v=hCDzSR6bW10",
+    "Підтягування": "https://www.youtube.com/watch?v=eGo4IYlbE5g",
+    "Віджимання на брусах": "https://www.youtube.com/watch?v=2z8JmcrW-As"
+};
 
 const beep = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
 
@@ -190,8 +207,12 @@ function calcVolume() {
 }
 
 function openVideo(name) {
-    const query = encodeURIComponent(name + " техніка виконання");
-    window.open(`https://www.youtube.com/results?search_query=${query}`, '_blank');
+    if(videoLinks[name]) {
+        window.open(videoLinks[name], '_blank');
+    } else {
+        const query = encodeURIComponent(name + " техніка виконання");
+        window.open(`https://www.youtube.com/results?search_query=${query}`, '_blank');
+    }
 }
 
 function add(cN, cS, cR, cW, cT) {
@@ -204,21 +225,18 @@ function add(cN, cS, cR, cW, cT) {
     if(!date || !n || !s) return;
     if(!data[date]) data[date] = [];
     let sets = [];
-    for(let i=0; i<+s; i++) sets.push({r: +r, w: +w});
+    for(let i=0; i<+s; i++) sets.push({r: +r, w: +w, rpe: 7});
     data[date].push({name: n, arr: sets, tempo: t});
     save(); updateUI();
     
-    if(!cN) { 
-        document.getElementById("name").value = ""; 
-        document.getElementById("sets").value = ""; 
-    }
+    if(!cN) { document.getElementById("name").value = ""; document.getElementById("sets").value = ""; }
 }
 
 function applySplit(type) {
     const s = {
         'Верх': [['Жим лежачи', 3, 10, 40, '3-0-1-0'], ['Тяга в нахилі', 3, 10, 30, '2-1-1-0']],
-        'Низ': [['Присідання', 3, 10, 50, '3-1-1-0'], ['Мертва тяга', 3, 10, 60, '2-0-1-0']],
-        'Full': [['Присідання', 3, 10, 40, '3-1-1-0'], ['Жим штанги', 3, 10, 40, '3-0-1-0']]
+        'Низ': [['Присідання', 3, 12, 50, '3-1-1-0'], ['Випади', 3, 12, 10, '2-1-1-0']],
+        'Full': [['Станова тяга', 3, 8, 60, '2-1-1-0'], ['Армійський жим', 3, 10, 20, '2-0-1-0']]
     };
     s[type].forEach(x => add(x[0], x[1], x[2], x[3], x[4]));
 }
@@ -235,15 +253,17 @@ function render() {
                     <input type="number" value="${s.r}" onchange="edit(${i},${j},'r',this.value)"> 
                     <small>×</small>
                     <input type="number" value="${s.w}" onchange="edit(${i},${j},'w',this.value)">
+                    <small style="margin-left:5px; font-size:9px; color:#94a3b8;">RPE:</small>
+                    <input type="number" value="${s.rpe || 7}" min="1" max="10" style="width:35px;" onchange="edit(${i},${j},'rpe',this.value)">
                 </div>
-                <button class="done-btn" onclick="doneSet(${i},${j})">${done[i+'-'+j]?'✔':'OK'}</button>
+                <button class="done-btn" onclick="doneSet(${i},${j})">✔</button>
             </div>`).join("");
         
         l.innerHTML += `
             <div class="exercise">
                 <div style="display:flex; align-items:center;">
                     <b style="flex:1;">${ex.name}</b>
-                    <button class="video-btn" onclick="openVideo('${ex.name}')" title="Дивитись техніку">📺</button>
+                    <button class="video-btn" onclick="openVideo('${ex.name}')">📺</button>
                     <button onclick="delEx(${i})" style="width:25px; background:none; color:var(--danger); border:none; margin-left:10px;">✕</button>
                 </div>
                 <div style="font-size:10px; color:var(--warning); margin-top:5px;">Темп: ${ex.tempo}</div>
@@ -253,8 +273,9 @@ function render() {
 }
 
 function doneSet(i, j) {
-    done[i+'-'+j] = !done[i+'-'+j];
-    if(done[i+'-'+j]) showRest(90);
+    let key = i+'-'+j;
+    done[key] = !done[key];
+    if(done[key]) showRest(90);
     updateUI();
 }
 
@@ -312,19 +333,19 @@ async function generatePDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     let y = 20;
-    doc.text("PRO-FIT ELITE+ REPORT", 20, y); y += 15;
+    doc.text("PRO-FIT ELITE V4 REPORT", 20, y); y += 15;
     Object.keys(data).sort().reverse().forEach(d => {
         if(y > 270) { doc.addPage(); y = 20; }
         doc.setFontSize(12); doc.setTextColor(59, 130, 246);
         doc.text(`ДАТА: ${d} | ЧАС: ${durations[d] || '?'}`, 20, y); y += 7;
         doc.setTextColor(0);
         data[d].forEach(ex => {
-            let sStr = ex.arr.map(s => `${s.r}x${s.w}kg`).join(', ');
+            let sStr = ex.arr.map(s => `${s.r}x${s.w}kg (RPE:${s.rpe || 7})`).join(', ');
             doc.text(`- ${ex.name}: ${sStr}`, 25, y); y += 6;
         });
         y += 5;
     });
-    doc.save(`ProFit_Report.pdf`);
+    doc.save(`ProFit_Elite_Report.pdf`);
 }
 
 function copyDay() { localStorage.setItem("copy", JSON.stringify(data[date])); alert("Copied"); }
