@@ -6,179 +6,204 @@
 <title>Pro-Fit Tracker AI FULL+</title>
 
 <style>
-body{margin:0;font-family:Arial;background:#0b0f1a;color:white;}
-
-.header{
-padding:15px;
-text-align:center;
-font-size:20px;
+/* Основна палітра: темний фон та приглушений синій */
+:root {
+    --accent: #3b82f6; /* Новий, менш контрастний синій */
+    --accent-hover: #2563eb;
+    --bg: #0b0f1a;
+    --card-bg: #111827;
+    --input-bg: #0f172a;
+    --danger: #ef4444;
 }
 
-.container{padding:15px;}
+body{margin:0;font-family: 'Segoe UI', Roboto, Arial, sans-serif; background: var(--bg); color:white;}
+
+.header{
+padding:20px;
+text-align:center;
+font-size:22px;
+font-weight: bold;
+letter-spacing: 1px;
+}
+
+.container{padding:15px; max-width: 600px; margin: 0 auto;}
 
 .card{
-background:#111827;
-padding:15px;
-border-radius:12px;
+background: var(--card-bg);
+padding:18px;
+border-radius:16px;
 margin-bottom:15px;
+box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 input,select,button{
 width:100%;
-padding:10px;
-margin-top:8px;
-border-radius:8px;
+padding:12px;
+margin-top:10px;
+border-radius:10px;
 border:none;
 outline: none;
+box-sizing: border-box;
+font-size: 14px;
 }
 
-input,select{background:#0f172a;color:white;}
+input,select{background: var(--input-bg); color:white; border: 1px solid #1e293b;}
 
 button{
-background:#00f5ff;
+background: var(--accent);
+color: white;
 font-weight:bold;
 cursor:pointer;
-transition: opacity 0.2s;
+transition: all 0.2s;
 }
 
-button:active { opacity: 0.7; }
+button:hover { background: var(--accent-hover); }
+button:active { transform: scale(0.98); }
 
 .exercise{
-background:#0f172a;
-padding:10px;
-border-radius:10px;
-margin-top:10px;
+background: var(--input-bg);
+padding:15px;
+border-radius:14px;
+margin-top:12px;
 cursor: grab;
-border: 1px solid transparent;
+border: 1px solid #1e293b;
 }
-
-.exercise:active { cursor: grabbing; }
 
 .set{
 display:flex;
 align-items:center;
 justify-content:space-between;
-padding:6px;
-margin-top:5px;
-background:#0b1220;
-border-radius:8px;
+padding:8px;
+margin-top:8px;
+background: var(--bg);
+border-radius:10px;
 }
 
 .set input {
-    width: 50px;
-    background: transparent;
+    width: 55px;
+    background: #1e293b;
     text-align: center;
-    border-bottom: 1px solid #334155;
+    border: none;
     margin: 0 5px;
-    padding: 2px;
+    padding: 5px;
+    border-radius: 6px;
 }
 
 .set.done{
 text-decoration:line-through;
-opacity:0.4;
+opacity:0.3;
+background: #060a13;
 }
 
 .deleteBtn{
-background:#ff3b3b;
-margin-top:8px;
+background: transparent;
+color: var(--danger);
+border: 1px solid var(--danger);
+margin-top:12px;
+}
+.deleteBtn:hover { background: var(--danger); color: white; }
+
+.timer, .restBox{
+position:fixed;
+right:15px;
+background: var(--card-bg);
+padding:12px;
+border-radius:14px;
+font-size:13px;
+font-weight: bold;
+z-index: 100;
+box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
 }
 
-.timer{
-position:fixed;
-top:10px;
-right:10px;
-background:#111827;
-border:1px solid #00f5ff;
-padding:10px;
-border-radius:12px;
-color:#00f5ff;
-font-size:12px;
-z-index: 100;
-}
-
-.restBox{
-position:fixed;
-top:70px;
-right:10px;
-background:#111827;
-border:1px solid #a78bfa;
-padding:10px;
-border-radius:12px;
-color:#a78bfa;
-font-size:12px;
-z-index: 100;
-}
+.timer { top:15px; border: 1px solid var(--accent); color: var(--accent); }
+.restBox { top:80px; border: 1px solid #a78bfa; color: #a78bfa; }
 
 .modal{
 position:fixed;
 inset:0;
-background:#000000cc;
+background: rgba(0,0,0,0.85);
 display:none;
 align-items:center;
 justify-content:center;
 z-index: 1000;
+backdrop-filter: blur(4px);
 }
 
 .modal-content{
-background:#111827;
-padding:15px;
-border-radius:12px;
-width:90%;
+background: var(--card-bg);
+padding:25px;
+border-radius:20px;
+width:85%;
+max-width: 400px;
 }
 
-.small{font-size:12px;opacity:0.8;}
-.close{background:#ff3b3b;margin-top:10px;}
+.small{font-size:12px; opacity:0.6; margin-top: 5px;}
+.close{background: #374151; margin-top:15px;}
 
-#dateInfo{
+#dateInfo {
 text-align:center;
-font-size:14px;
-color:#00f5ff;
-padding:10px;
+font-size:15px;
+color: var(--accent);
+font-weight: 500;
+}
+
+#result {
+    line-height: 1.5;
+    font-size: 14px;
+    padding: 10px;
+    border-radius: 8px;
+    background: #0f172a;
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">🏋️ Pro-Fit Tracker AI FULL+</div>
+<div class="header">🏋️ Pro-Fit Tracker</div>
 
-<div class="card" id="dateInfo">📅</div>
+<div class="card" id="dateInfo">📅 Завантаження...</div>
 
 <div class="timer" id="timerBox">⏱ 00:00</div>
-<div class="restBox" id="restBox">⏳ 0s</div>
+<div class="restBox" id="restBox">⏳ Відпочинок</div>
 
 <div class="container">
 
 <div class="card">
-<input type="date" id="date">
+    <input type="date" id="date">
 </div>
 
 <div class="card">
-<h3>⏳ Відпочинок</h3>
-<div class="small">Між підходами (сек)</div>
-<input id="restSet" type="number" value="90">
-
-<div class="small">Між вправами (сек)</div>
-<input id="restEx" type="number" value="180">
+    <div style="display:flex; gap:10px;">
+        <div style="flex:1">
+            <div class="small">Відпочинок (сек)</div>
+            <input id="restSet" type="number" value="90">
+        </div>
+        <div style="flex:1">
+            <div class="small">Між вправами</div>
+            <input id="restEx" type="number" value="180">
+        </div>
+    </div>
 </div>
 
 <div class="card">
-<h3>➕ Додати вправу</h3>
-
-<input id="name" placeholder="Назва">
-<input id="sets" type="number" placeholder="Підходи">
-<input id="reps" type="number" placeholder="Повторення">
-<input id="weight" type="number" placeholder="Вага (кг)">
-
-<button onclick="add()">Додати</button>
+    <h3 style="margin-top:0">➕ Додати вправу</h3>
+    <input id="name" placeholder="Назва вправи (напр. Жим лежачи)">
+    <div style="display:flex; gap:8px;">
+        <input id="sets" type="number" placeholder="Підходи">
+        <input id="reps" type="number" placeholder="Повтори">
+        <input id="weight" type="number" placeholder="Вага (кг)">
+    </div>
+    <button onclick="add()">Додати вправу</button>
 </div>
 
 <div class="card">
-<button onclick="start()">▶ Старт</button>
-<button onclick="finish()">🏁 Завершити тренування</button>
-<button onclick="copyDay()">📋 Копіювати день</button>
-<button onclick="pasteDay()">📥 Вставити день</button>
-<button onclick="clearDay()" style="background:#ff3b3b; margin-top:10px;">🗑 Очистити день</button>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <button onclick="start()">▶ Старт</button>
+        <button onclick="finish()" style="background:#10b981">🏁 Фініш</button>
+        <button onclick="copyDay()" style="background:#4b5563">📋 Копія</button>
+        <button onclick="pasteDay()" style="background:#4b5563">📥 Вставити</button>
+    </div>
+    <button onclick="clearDay()" style="background:#ef4444; margin-top:10px;">🗑 Очистити цей день</button>
 </div>
 
 <div id="list"></div>
@@ -186,36 +211,33 @@ padding:10px;
 </div>
 
 <div class="modal" id="modal">
-<div class="modal-content">
+    <div class="modal-content">
+        <h2 style="margin-top:0">🧠 AI Аналіз</h2>
+        
+        <div class="small">Наскільки важким було тренування? (1-10)</div>
+        <input id="q1" type="number" min="1" max="10" value="7">
 
-<h3>🧠 AI Анкета</h3>
+        <div class="small">Чи були підходи до повної відмови?</div>
+        <select id="q2">
+            <option value="no">Ні, був запас</option>
+            <option value="yes">Так, в останніх підходах</option>
+            <option value="hardcore">Так, у кожному підході</option>
+        </select>
 
-<div class="small">Важкість (1-5)</div>
-<input id="q1" type="number">
+        <div class="small">Ваш рівень енергії зараз?</div>
+        <select id="q3">
+            <option value="low">Виснажений (Low)</option>
+            <option value="mid">Нормальний (Mid)</option>
+            <option value="high">Бадьорий (High)</option>
+        </select>
 
-<div class="small">Відказ?</div>
-<select id="q2">
-<option value="no">Ні</option>
-<option value="yes">Так</option>
-</select>
-
-<div class="small">Енергія</div>
-<select id="q3">
-<option value="low">Низька</option>
-<option value="mid">Середня</option>
-<option value="high">Висока</option>
-</select>
-
-<button onclick="getAI()">Отримати пораду</button>
-<button class="close" onclick="closeAI()">Закрити</button>
-
-<div id="result" style="margin-top:10px;color:#00f5ff;"></div>
-
-</div>
+        <button onclick="getAI()" style="margin-top:20px;">Отримати рекомендацію</button>
+        <div id="result" style="margin-top:15px; color:#93c5fd; min-height: 40px;"></div>
+        <button class="close" onclick="closeAI()">Закрити</button>
+    </div>
 </div>
 
 <script>
-
 let data = JSON.parse(localStorage.getItem("fit")) || {};
 let date="";
 let active=false;
@@ -225,209 +247,170 @@ let restTimer=null;
 let done={};
 let draggedItemIndex = null;
 
-/* DATE */
 document.getElementById("date").onchange=(e)=>{
-date=e.target.value;
-render();
-updateDateInfo();
+    date=e.target.value;
+    render();
+    updateDateInfo();
 };
 
-function save(){
-localStorage.setItem("fit",JSON.stringify(data));
-}
+function save(){ localStorage.setItem("fit",JSON.stringify(data)); }
 
-/* ADD */
 function add(){
-let d=document.getElementById("date").value;
-let nameEl=document.getElementById("name");
-let setsEl=document.getElementById("sets");
-let repsEl=document.getElementById("reps");
-let weightEl=document.getElementById("weight");
+    let d=document.getElementById("date").value;
+    let n=document.getElementById("name");
+    let s=document.getElementById("sets");
+    let r=document.getElementById("reps");
+    let w=document.getElementById("weight");
 
-if(!d || !nameEl.value || !setsEl.value) return;
+    if(!d || !n.value || !s.value) return;
+    if(!data[d]) data[d]=[];
 
-if(!data[d]) data[d]=[];
+    let arr=[];
+    for(let i=0; i<+s.value; i++){
+        arr.push({r: +r.value || 0, w: +w.value || 0});
+    }
 
-let arr=[];
-for(let i=0;i<+setsEl.value;i++){
-    arr.push({r: +repsEl.value, w: +weightEl.value});
-}
+    data[d].push({name: n.value, arr});
+    save();
+    render();
 
-data[d].push({name: nameEl.value, arr, note:""});
-
-save();
-render();
-
-// Очищення полів
-nameEl.value = "";
-setsEl.value = "";
-repsEl.value = "";
-weightEl.value = "";
+    n.value=""; s.value=""; r.value=""; w.value="";
 }
 
 /* DRAG & DROP */
-function drag(ev, index) {
-    draggedItemIndex = index;
-    ev.dataTransfer.setData("text", index);
-}
-
-function allowDrop(ev) {
-    ev.preventDefault();
-}
-
+function drag(ev, index) { draggedItemIndex = index; ev.dataTransfer.setData("text", index); }
+function allowDrop(ev) { ev.preventDefault(); }
 function drop(ev, targetIndex) {
     ev.preventDefault();
-    if (draggedItemIndex === null || draggedItemIndex === targetIndex) return;
     const movedItem = data[date].splice(draggedItemIndex, 1)[0];
     data[date].splice(targetIndex, 0, movedItem);
-    save();
-    render();
+    save(); render();
 }
 
-/* EDIT DATA */
-function updateWeight(exIdx, setIdx, val) {
-    data[date][exIdx].arr[setIdx].w = +val;
-    save();
-}
-
-function updateReps(exIdx, setIdx, val) {
-    data[date][exIdx].arr[setIdx].r = +val;
-    save();
-}
+function updateWeight(exIdx, setIdx, val) { data[date][exIdx].arr[setIdx].w = +val; save(); }
+function updateReps(exIdx, setIdx, val) { data[date][exIdx].arr[setIdx].r = +val; save(); }
 
 function clearDay() {
-    if(confirm("Видалити всі вправи за цей день?")) {
-        data[date] = [];
-        save();
-        render();
-    }
+    if(confirm("Видалити всі дані за сьогодні?")) { data[date] = []; save(); render(); }
 }
 
-/* COPY / PASTE */
 function copyDay(){
-if(!data[date]) return;
-localStorage.setItem("copiedDay",JSON.stringify(data[date]));
-alert("День скопійовано ✔");
+    if(!data[date]) return;
+    localStorage.setItem("copiedDay", JSON.stringify(data[date]));
+    alert("Дані дня скопійовано");
 }
 
 function pasteDay(){
-let c=localStorage.getItem("copiedDay");
-if(!c){alert("Немає копії ❌");return;}
-data[date]=JSON.parse(c);
-save();
-render();
-alert("Вставлено ✔");
+    let c = localStorage.getItem("copiedDay");
+    if(!c) return;
+    data[date] = JSON.parse(c);
+    save(); render();
 }
 
-/* DATE INFO */
 function updateDateInfo(){
-let d=new Date(date || new Date());
-let days=["Неділя","Понеділок","Вівторок","Середа","Четвер","П’ятниця","Субота"];
-let dayName=days[d.getDay()];
-let formatted=d.toISOString().split("T")[0];
-document.getElementById("dateInfo").innerText=`📅 ${formatted} | ${dayName}`;
+    let d = new Date(date || new Date());
+    let days = ["Неділя","Понеділок","Вівторок","Середа","Четвер","П’ятниця","Субота"];
+    document.getElementById("dateInfo").innerText = `📅 ${date} | ${days[d.getDay()]}`;
 }
 
-/* START / TIMER */
 function start(){
-active=true;
-done={};
-startTime=new Date();
-if(mainTimer) clearInterval(mainTimer);
-mainTimer=setInterval(()=>{
-let d=Math.floor((new Date()-startTime)/1000);
-let m=Math.floor(d/60),s=d%60;
-timerBox.innerText=`⏱ ${m}:${s<10?'0':''}${s}`;
-},1000);
+    active=true; done={}; startTime=new Date();
+    if(mainTimer) clearInterval(mainTimer);
+    mainTimer = setInterval(()=>{
+        let diff = Math.floor((new Date()-startTime)/1000);
+        let m=Math.floor(diff/60), s=diff%60;
+        document.getElementById("timerBox").innerText = `⏱ ${m}:${s<10?'0':''}${s}`;
+    }, 1000);
 }
 
 function showRest(sec){
-let t=sec;
-clearInterval(restTimer);
-restTimer=setInterval(()=>{
-restBox.innerText=`⏳ ${t}s`;
-t--;
-if(t<0){
-clearInterval(restTimer);
-restBox.innerText="⏳ готово";
-}
-},1000);
+    let t=sec; clearInterval(restTimer);
+    restTimer = setInterval(()=>{
+        document.getElementById("restBox").innerText = `⏳ ${t}s`;
+        t--;
+        if(t<0){ clearInterval(restTimer); document.getElementById("restBox").innerText = "⏳ Готово!"; }
+    },1000);
 }
 
 function doneSet(i,j,last){
-done[i+"-"+j]=!done[i+"-"+j];
-if(done[i+"-"+j]){
-    if(last) showRest(+document.getElementById("restEx").value);
-    else showRest(+document.getElementById("restSet").value);
-}
-render();
+    let key = i+"-"+j;
+    done[key] = !done[key];
+    if(done[key]){
+        let sVal = +document.getElementById("restSet").value;
+        let eVal = +document.getElementById("restEx").value;
+        showRest(last ? eVal : sVal);
+    }
+    render();
 }
 
 function finish(){
-active=false;
-clearInterval(mainTimer);
-document.getElementById("modal").style.display="flex";
+    clearInterval(mainTimer);
+    document.getElementById("modal").style.display="flex";
 }
 
-/* AI */
+/* ПОКРАЩЕНА ЛОГІКА AI */
 function getAI(){
-let effort=+q1.value;
-let fail=q2.value;
-let energy=q3.value;
-let msg="";
-if(effort>=4 && fail==="yes") msg="🔴 Перевантаження. Зменш вагу наступного разу.";
-else if(energy==="high") msg="🟢 Чудова форма! Можна спробувати +1-2 кг.";
-else msg="🟡 Стабільний прогрес. Продовжуй в тому ж дусі.";
-result.innerText=msg;
+    let rpe = +document.getElementById("q1").value;
+    let fail = document.getElementById("q2").value;
+    let energy = document.getElementById("q3").value;
+    let msg = "";
+
+    if(rpe >= 9 || fail === "hardcore"){
+        msg = "⚠️ <b>Центральна нервова система виснажена.</b> Наступне тренування зробіть 'легким' (зменште вагу на 20%). Дайте тілу 48 годин на відновлення.";
+    } else if (energy === "high" && rpe < 8){
+        msg = "🚀 <b>Потенціал для прогресу!</b> Ви почуваєтесь добре. На наступному тренуванні спробуйте додати +2.5 кг або зробіть на 2 повторення більше.";
+    } else if (energy === "low"){
+        msg = "💤 <b>Пріоритет на відновлення.</b> Зверніть увагу на сон та кількість білка. Сьогодні ви відпрацювали добре, але не тисніть на максимум завтра.";
+    } else {
+        msg = "✅ <b>Стабільний режим.</b> Навантаження підібрано ідеально. Продовжуйте працювати за цим планом ще 1-2 тижні перед підвищенням ваги.";
+    }
+
+    document.getElementById("result").innerHTML = msg;
 }
 
-function closeAI(){ modal.style.display="none"; }
+function closeAI(){ document.getElementById("modal").style.display="none"; }
 
 function deleteExercise(i){
-data[date].splice(i,1);
-save();
-render();
+    data[date].splice(i,1);
+    save(); render();
 }
 
-/* RENDER */
 function render(){
-let listEl = document.getElementById("list");
-listEl.innerHTML="";
-if(!data[date]) return;
+    let listEl = document.getElementById("list");
+    listEl.innerHTML="";
+    if(!data[date]) return;
 
-data[date].forEach((e,i)=>{
-let setsHTML=e.arr.map((s,j)=>`
-<div class="set ${done[i+"-"+j]?'done':''}">
-    <div>
-        <input type="number" value="${s.r}" onchange="updateReps(${i},${j},this.value)"> 
-        x 
-        <input type="number" value="${s.w}" onchange="updateWeight(${i},${j},this.value)"> кг
-    </div>
-    <button onclick="doneSet(${i},${j},${j===e.arr.length-1})" style="width:40px; margin:0;">✔</button>
-</div>
-`).join("");
+    data[date].forEach((e,i)=>{
+        let setsHTML=e.arr.map((s,j)=>`
+        <div class="set ${done[i+"-"+j]?'done':''}">
+            <div>
+                <input type="number" value="${s.r}" onchange="updateReps(${i},${j},this.value)"> 
+                x 
+                <input type="number" value="${s.w}" onchange="updateWeight(${i},${j},this.value)"> кг
+            </div>
+            <button onclick="doneSet(${i},${j},${j===e.arr.length-1})" style="width:40px; margin:0; padding:5px;">✔</button>
+        </div>
+        `).join("");
 
-listEl.innerHTML+=`
-<div class="card exercise" draggable="true" ondragstart="drag(event, ${i})" ondragover="allowDrop(event)" ondrop="drop(event, ${i})">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-        <b>${e.name}</b>
-        <span style="font-size:10px; opacity:0.5;">≡ перетягнути</span>
-    </div>
-    ${setsHTML}
-    <button class="deleteBtn" onclick="deleteExercise(${i})">🗑 Видалити вправу</button>
-</div>`;
-});
+        listEl.innerHTML+=`
+        <div class="card exercise" draggable="true" ondragstart="drag(event, ${i})" ondragover="allowDrop(event)" ondrop="drop(event, ${i})">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <b style="color: var(--accent)">${e.name}</b>
+                <span style="font-size:12px; opacity:0.4;">☰</span>
+            </div>
+            ${setsHTML}
+            <button class="deleteBtn" onclick="deleteExercise(${i})">🗑 Видалити</button>
+        </div>`;
+    });
 }
 
-/* INIT */
 (()=>{
-let today=new Date().toISOString().split("T")[0];
-date=today;
-document.getElementById("date").value=today;
-render();
-updateDateInfo();
+    let today=new Date().toISOString().split("T")[0];
+    date=today;
+    document.getElementById("date").value=today;
+    render();
+    updateDateInfo();
 })();
-
 </script>
 </body>
 </html>
