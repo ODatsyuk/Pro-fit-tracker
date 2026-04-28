@@ -3,14 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Pro-Fit Tracker | Professional Edition</title>
-
+<title>Pro-Fit Tracker | Pro Edition</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 :root {
     --accent: #3b82f6; 
-    --accent-hover: #2563eb;
     --bg: #0b0f1a;
     --card-bg: #111827;
     --input-bg: #0f172a;
@@ -18,126 +16,72 @@
     --success: #10b981;
 }
 
-body{margin:0; font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color:white; overflow-x: hidden;}
+body { margin:0; font-family: 'Inter', sans-serif; background: var(--bg); color:white; padding-bottom: 80px; }
 
-/* Анімація появи карток */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
+.header { padding:20px; text-align:center; font-size:22px; font-weight:800; color: var(--accent); letter-spacing: 1px; }
 
-.header{ padding:25px; text-align:center; font-size:24px; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: 2px;}
+.container { padding:15px; max-width: 600px; margin: 0 auto; }
 
-.container{padding:15px; max-width: 600px; margin: 0 auto;}
-
-.card{
+.card {
     background: var(--card-bg);
     padding:20px;
     border-radius:20px;
-    margin-bottom:20px;
+    margin-bottom:15px;
     border: 1px solid rgba(255,255,255,0.05);
-    animation: fadeIn 0.4s ease-out;
 }
 
 input, select, button {
-    width:100%;
-    padding:14px;
-    margin-top:10px;
-    border-radius:12px;
-    border:none;
-    outline: none;
-    box-sizing: border-box;
-    font-size: 15px;
-    transition: all 0.2s ease;
+    width:100%; padding:12px; margin-top:10px; border-radius:12px; border:none; outline: none; box-sizing: border-box; font-size: 15px;
 }
 
 input, select { background: var(--input-bg); color:white; border: 1px solid #1e293b; }
-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
 
-button {
-    background: var(--accent);
-    color: white;
-    font-weight: 700;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
+button { background: var(--accent); color: white; font-weight: 700; cursor: pointer; transition: 0.2s; }
+button:active { transform: scale(0.98); }
 
-button:hover { background: var(--accent-hover); transform: translateY(-1px); }
-button:active { transform: translateY(1px); }
-
+/* Стилі для вправ та перетягування */
 .exercise {
     background: var(--input-bg);
-    padding:18px;
+    padding:15px;
     border-radius:16px;
-    margin-top:15px;
-    border-left: 4px solid var(--accent);
+    margin-top:12px;
+    border: 1px solid #1e293b;
+    position: relative;
+    cursor: default;
+}
+
+.drag-handle {
+    cursor: grab;
+    padding: 5px;
+    color: var(--accent);
+    font-size: 20px;
+    user-select: none;
 }
 
 .set {
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:10px;
-    margin-top:8px;
-    background: rgba(255,255,255,0.03);
-    border-radius:12px;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:8px; margin-top:8px; background: rgba(255,255,255,0.03); border-radius:10px;
 }
 
-.set-inputs { display: flex; align-items: center; gap: 8px; }
-.set input { width: 60px; padding: 8px; background: #1e293b; border: none; text-align: center; }
+.set input { width: 55px; padding: 6px; background: #1e293b; border: none; text-align: center; margin: 0;}
 
-.done-btn {
-    width: 65px !important;
-    height: 40px;
-    margin: 0 !important;
-    background: #1e293b;
-    color: #94a3b8;
-}
-
+.done-btn { width: 60px !important; margin: 0 !important; background: #1e293b; }
+.set.done { opacity: 0.3; text-decoration: line-through; }
 .set.done .done-btn { background: var(--success); color: white; }
-.set.done { opacity: 0.5; }
 
 .timer-float {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--accent);
-    padding: 10px 25px;
-    border-radius: 50px;
-    display: flex;
-    gap: 20px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-    z-index: 1000;
-    font-weight: bold;
+    position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%);
+    background: var(--accent); padding: 12px 25px; border-radius: 50px;
+    display: flex; gap: 20px; z-index: 1000; font-weight: bold; box-shadow: 0 5px 20px rgba(0,0,0,0.5);
 }
 
-.modal{
-    position:fixed;
-    inset:0;
-    background: rgba(0,0,0,0.9);
-    display:none;
-    align-items:center;
-    justify-content:center;
-    z-index: 2000;
-    backdrop-filter: blur(8px);
+.modal {
+    position:fixed; inset:0; background: rgba(0,0,0,0.9); display:none; align-items:center; justify-content:center; z-index: 2000;
 }
 
-.modal-content{
-    background: var(--card-bg);
-    padding:30px;
-    border-radius:24px;
-    width:90%;
-    max-width: 450px;
-}
+.modal-content { background: var(--card-bg); padding:25px; border-radius:24px; width:90%; max-width: 400px; }
 
-#chartContainer {
-    margin-top: 20px;
-    height: 250px;
-}
+#chartBox { height: 220px; margin-top: 10px; }
 </style>
 </head>
 
@@ -147,53 +91,50 @@ button:active { transform: translateY(1px); }
 
 <div class="timer-float" id="floater" style="display:none;">
     <span id="mainT">⏱ 00:00</span>
-    <span id="restT" style="color: #bfdbfe;">⏳ Готово</span>
+    <span id="restT" style="color: #d1d5db;">⏳ Відпочинок</span>
 </div>
 
 <div class="container">
 
     <div class="card">
         <input type="date" id="date">
-        <div id="dateDisplay" style="text-align:center; margin-top:10px; font-weight:600; color: var(--accent);"></div>
     </div>
 
     <div class="card">
-        <h3 style="margin:0">📈 Прогрес ваги</h3>
-        <div id="chartContainer">
+        <h3 style="margin:0 0 10px 0">📈 Аналітика вправи</h3>
+        <select id="chartExSelect" onchange="updateChart()">
+            <option value="">Виберіть вправу для графіка</option>
+        </select>
+        <div id="chartBox">
             <canvas id="myChart"></canvas>
         </div>
     </div>
 
     <div class="card">
-        <div style="display:flex; gap:10px;">
-            <div style="flex:1">
-                <div style="font-size:11px; opacity:0.6">ВІДПОЧИНОК (С)</div>
-                <input id="restSet" type="number" value="90">
-            </div>
-            <div style="flex:1">
-                <div style="font-size:11px; opacity:0.6">МІЖ ВПРАВАМИ (С)</div>
-                <input id="restEx" type="number" value="180">
-            </div>
-        </div>
-    </div>
-
-    <div class="card">
-        <h3 style="margin-top:0">➕ Нова вправа</h3>
-        <input id="name" placeholder="Назва (напр. Присідання)">
-        <div style="display:flex; gap:10px;">
+        <h3 style="margin-top:0">➕ Додати вправу</h3>
+        <input id="name" list="popular-exercises" placeholder="Назва або виберіть зі списку">
+        <datalist id="popular-exercises">
+            <option value="Жим лежачи">
+            <option value="Присідання зі штангою">
+            <option value="Станова тяга">
+            <option value="Підтягування">
+            <option value="Віджимання на брусах">
+            <option value="Армійський жим">
+            <option value="Згинання на біцепс">
+        </datalist>
+        <div style="display:flex; gap:8px;">
             <input id="sets" type="number" placeholder="Підходи">
             <input id="reps" type="number" placeholder="Повтори">
             <input id="weight" type="number" placeholder="Вага">
         </div>
-        <button onclick="add()">ДОДАТИ ДО ПЛАНУ</button>
+        <button onclick="add()">ДОДАТИ</button>
     </div>
 
-    <div class="card" style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+    <div class="card" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
         <button onclick="start()" style="background: var(--success)">▶ СТАРТ</button>
         <button onclick="finish()" style="background: #6366f1">🏁 ФІНІШ</button>
-        <button onclick="copyDay()" style="background:#334155">📋 КОПІЯ</button>
-        <button onclick="pasteDay()" style="background:#334155">📥 ВСТАВИТИ</button>
-        <button onclick="clearDay()" style="background:var(--danger); grid-column: span 2;">🗑 ОЧИСТИТИ ДЕНЬ</button>
+        <button onclick="copyDay()">📋 КОПІЯ</button>
+        <button onclick="pasteDay()">📥 ВСТАВИТИ</button>
     </div>
 
     <div id="list"></div>
@@ -201,17 +142,11 @@ button:active { transform: translateY(1px); }
 
 <div class="modal" id="modal">
     <div class="modal-content">
-        <h2 style="margin-top:0">🧠 AI Аналіз тренування</h2>
-        <div style="font-size:12px; opacity:0.7">Важкість за шкалою RPE (1-10)</div>
+        <h2>🧠 AI Порада</h2>
+        <div style="font-size:12px; opacity:0.7">Важкість (1-10)</div>
         <input id="q1" type="number" value="7">
-        <div style="font-size:12px; opacity:0.7; margin-top:10px;">Відмова м'язів?</div>
-        <select id="q2">
-            <option value="no">Ні, був запас</option>
-            <option value="yes">Так, в кінці</option>
-            <option value="hardcore">Повна відмова</option>
-        </select>
-        <button onclick="getAI()" style="margin-top:20px;">АНАЛІЗУВАТИ</button>
-        <div id="result" style="margin-top:15px; padding:12px; background: #0f172a; border-radius:10px; font-size:14px; color: #93c5fd;"></div>
+        <button onclick="getAI()" style="margin-top:15px;">АНАЛІЗ</button>
+        <div id="result" style="margin-top:15px; color: #93c5fd;"></div>
         <button onclick="closeAI()" style="background:#374151; margin-top:10px;">ЗАКРИТИ</button>
     </div>
 </div>
@@ -219,14 +154,11 @@ button:active { transform: translateY(1px); }
 <script>
 let data = JSON.parse(localStorage.getItem("fit")) || {};
 let date = "";
-let timerActive = false;
 let startTime = null;
 let mainInt, restInt;
 let done = {};
-let draggedIdx = null;
 let myChart = null;
 
-// Аудіо для таймера (короткий сигнал)
 const beep = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
 
 document.getElementById("date").onchange = (e) => {
@@ -238,14 +170,24 @@ function save() { localStorage.setItem("fit", JSON.stringify(data)); }
 
 function updateUI() {
     render();
-    updateDateDisplay();
+    fillChartSelect();
     updateChart();
 }
 
-function updateDateDisplay() {
-    let d = new Date(date || new Date());
-    let days = ["Неділя","Понеділок","Вівторок","Середа","Четвер","П’ятниця","Субота"];
-    document.getElementById("dateDisplay").innerText = days[d.getDay()];
+// Заповнюємо список вправ для графіка (унікальні назви з усієї історії)
+function fillChartSelect() {
+    let select = document.getElementById("chartExSelect");
+    let currentVal = select.value;
+    let exercisesSet = new Set();
+    Object.values(data).forEach(day => day.forEach(ex => exercisesSet.add(ex.name)));
+    
+    select.innerHTML = '<option value="">Виберіть вправу для графіка</option>';
+    exercisesSet.forEach(ex => {
+        let opt = document.createElement("option");
+        opt.value = ex; opt.innerText = ex;
+        select.appendChild(opt);
+    });
+    select.value = currentVal;
 }
 
 function add() {
@@ -255,64 +197,37 @@ function add() {
     
     let arr = [];
     for(let i=0; i<+s.value; i++) arr.push({r: +r.value || 0, w: +w.value || 0});
-    
     data[date].push({name: n.value, arr});
-    save();
-    updateUI();
+    save(); updateUI();
     n.value=""; s.value=""; r.value=""; w.value="";
 }
 
-function start() {
-    timerActive = true;
-    startTime = new Date();
-    document.getElementById("floater").style.display = "flex";
-    clearInterval(mainInt);
-    mainInt = setInterval(() => {
-        let diff = Math.floor((new Date() - startTime)/1000);
-        let m = Math.floor(diff/60), s = diff%60;
-        document.getElementById("mainT").innerText = `⏱ ${m}:${s<10?'0':''}${s}`;
-    }, 1000);
-}
-
-function showRest(sec) {
-    let t = sec;
-    clearInterval(restInt);
-    document.getElementById("restT").style.color = "#fff";
-    restInt = setInterval(() => {
-        document.getElementById("restT").innerText = `⏳ ${t}s`;
-        t--;
-        if(t < 0) {
-            clearInterval(restInt);
-            document.getElementById("restT").innerText = "⏳ Готово!";
-            document.getElementById("restT").style.color = "#10b981";
-            beep.play(); // Звуковий сигнал
-            if (navigator.vibrate) navigator.vibrate(200); // Вібрація
-        }
-    }, 1000);
-}
-
-function doneSet(i, j, last) {
-    let key = i + "-" + j;
-    done[key] = !done[key];
-    if(done[key]) {
-        let s = +document.getElementById("restSet").value;
-        let e = +document.getElementById("restEx").value;
-        showRest(last ? e : s);
-    }
-    render();
+/* DRAG & DROP LOGIC */
+let draggedIdx = null;
+function onDragStart(idx) { draggedIdx = idx; }
+function onDragOver(e) { e.preventDefault(); }
+function onDrop(idx) {
+    if (draggedIdx === null || draggedIdx === idx) return;
+    const items = data[date];
+    const movedItem = items.splice(draggedIdx, 1)[0];
+    items.splice(idx, 0, movedItem);
+    save(); render();
 }
 
 function updateChart() {
     const ctx = document.getElementById('myChart').getContext('2d');
+    const selectedEx = document.getElementById("chartExSelect").value;
+    if(!selectedEx) return;
+
     let labels = [], weights = [];
-    
-    // Беремо останні 7 записів, де є тренування
-    let sortedDates = Object.keys(data).sort().slice(-7);
-    sortedDates.forEach(d => {
-        labels.push(d.split("-").slice(1).join("/"));
-        let maxW = 0;
-        data[d].forEach(ex => ex.arr.forEach(s => { if(s.w > maxW) maxW = s.w; }));
-        weights.push(maxW);
+    // Сортуємо дати та шукаємо макс вагу для вибраної вправи
+    Object.keys(data).sort().forEach(d => {
+        let dayEx = data[d].find(ex => ex.name === selectedEx);
+        if(dayEx) {
+            labels.push(d.split("-").slice(1).join("/"));
+            let maxW = Math.max(...dayEx.arr.map(s => s.w));
+            weights.push(maxW);
+        }
     });
 
     if(myChart) myChart.destroy();
@@ -321,24 +236,17 @@ function updateChart() {
         data: {
             labels: labels,
             datasets: [{
-                label: 'Макс. вага (кг)',
+                label: selectedEx,
                 data: weights,
                 borderColor: '#3b82f6',
-                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.3,
                 fill: true,
-                tension: 0.4,
-                borderWidth: 3,
-                pointRadius: 5
+                backgroundColor: 'rgba(59, 130, 246, 0.1)'
             }]
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } },
-                x: { grid: { display: false }, ticks: { color: '#64748b' } }
-            }
+            responsive: true, maintainAspectRatio: false,
+            scales: { y: { beginAtZero: false, grid: { color: '#1e293b' } }, x: { grid: { display: false } } }
         }
     });
 }
@@ -351,52 +259,73 @@ function render() {
     data[date].forEach((e, i) => {
         let setsHTML = e.arr.map((s, j) => `
             <div class="set ${done[i+"-"+j]?'done':''}">
-                <div class="set-inputs">
-                    <input type="number" value="${s.r}" onchange="edit(${i},${j},'r',this.value)">
-                    <span style="opacity:0.5">×</span>
-                    <input type="number" value="${s.w}" onchange="edit(${i},${j},'w',this.value)">
-                    <span style="font-size:11px; opacity:0.5">кг</span>
+                <div style="display:flex; gap:5px; align-items:center;">
+                    <input type="number" value="${s.r}" onchange="edit(${i},${j},'r',this.value)"> 
+                    <small>×</small>
+                    <input type="number" value="${s.w}" onchange="edit(${i},${j},'w',this.value)"> 
+                    <small>кг</small>
                 </div>
                 <button class="done-btn" onclick="doneSet(${i},${j},${j===e.arr.length-1})">✔</button>
             </div>
         `).join("");
 
-        listEl.innerHTML += `
-            <div class="exercise">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                    <b style="font-size:16px;">${e.name}</b>
-                    <button onclick="delEx(${i})" style="width:35px; background:none; color:var(--danger); padding:0;">✕</button>
-                </div>
-                ${setsHTML}
+        let div = document.createElement("div");
+        div.className = "exercise";
+        div.draggable = true;
+        div.ondragstart = () => onDragStart(i);
+        div.ondragover = (ev) => onDragOver(ev);
+        div.ondrop = () => onDrop(i);
+        
+        div.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="drag-handle">☰</div>
+                <b style="flex-grow:1; margin-left:10px;">${e.name}</b>
+                <button onclick="delEx(${i})" style="width:30px; background:none; color:var(--danger); padding:0; margin:0;">✕</button>
             </div>
+            ${setsHTML}
         `;
+        listEl.appendChild(div);
     });
 }
 
 function edit(exI, setI, prop, val) { data[date][exI].arr[setI][prop] = +val; save(); updateChart(); }
 function delEx(i) { data[date].splice(i,1); save(); updateUI(); }
-function finish() { clearInterval(mainInt); document.getElementById("modal").style.display="flex"; }
-function closeAI() { document.getElementById("modal").style.display="none"; }
 
-function getAI() {
-    let rpe = +document.getElementById("q1").value;
-    let fail = document.getElementById("q2").value;
-    let res = document.getElementById("result");
-    if(rpe >= 9) res.innerHTML = "🔥 <b>Висока інтенсивність!</b> Тілу потрібно більше часу на відновлення. Наступне тренування зробіть легшим.";
-    else if(rpe < 7 && fail === "no") res.innerHTML = "💪 <b>Є запас!</b> Наступного разу спробуйте додати 2.5кг або виконати на 2 повтори більше.";
-    else res.innerHTML = "✅ <b>Ідеальний темп.</b> Ви в 'золотій середині' для росту м'язів.";
+function start() {
+    startTime = new Date();
+    document.getElementById("floater").style.display = "flex";
+    clearInterval(mainInt);
+    mainInt = setInterval(() => {
+        let diff = Math.floor((new Date() - startTime)/1000);
+        let m = Math.floor(diff/60), s = diff%60;
+        document.getElementById("mainT").innerText = `⏱ ${m}:${s<10?'0':''}${s}`;
+    }, 1000);
 }
 
-function clearDay() { if(confirm("Видалити тренування?")) { data[date]=[]; save(); updateUI(); } }
+function showRest(sec) {
+    let t = sec; clearInterval(restInt);
+    restInt = setInterval(() => {
+        document.getElementById("restT").innerText = `⏳ ${t}s`;
+        if(t-- <= 0) { clearInterval(restInt); beep.play(); document.getElementById("restT").innerText = "⏳ Готово!"; }
+    }, 1000);
+}
+
+function doneSet(i, j, last) {
+    done[i+"-"+j] = !done[i+"-"+j];
+    if(done[i+"-"+j]) showRest(last ? +document.getElementById("restEx").value : +document.getElementById("restSet").value);
+    render();
+}
+
+function finish() { clearInterval(mainInt); document.getElementById("modal").style.display="flex"; }
+function closeAI() { document.getElementById("modal").style.display="none"; }
+function getAI() { document.getElementById("result").innerText = "Чудова робота! Ви тримаєте ритм."; }
+
 function copyDay() { localStorage.setItem("copy", JSON.stringify(data[date])); alert("Скопійовано!"); }
 function pasteDay() { let c = localStorage.getItem("copy"); if(c) { data[date]=JSON.parse(c); save(); updateUI(); } }
 
-// Init
 (()=>{
     let today = new Date().toISOString().split("T")[0];
-    date = today;
-    document.getElementById("date").value = today;
-    updateUI();
+    date = today; document.getElementById("date").value = today; updateUI();
 })();
 </script>
 </body>
