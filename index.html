@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Pro-Fit Tracker AI FULL+</title>
+<title>Pro-Fit Tracker | Professional Edition</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 :root {
@@ -13,417 +15,388 @@
     --card-bg: #111827;
     --input-bg: #0f172a;
     --danger: #ef4444;
+    --success: #10b981;
 }
 
-body{margin:0;font-family: 'Segoe UI', Roboto, Arial, sans-serif; background: var(--bg); color:white;}
+body{margin:0; font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color:white; overflow-x: hidden;}
 
-.header{
-padding:20px;
-text-align:center;
-font-size:22px;
-font-weight: bold;
-letter-spacing: 1px;
+/* Анімація появи карток */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
+
+.header{ padding:25px; text-align:center; font-size:24px; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: 2px;}
 
 .container{padding:15px; max-width: 600px; margin: 0 auto;}
 
 .card{
-background: var(--card-bg);
-padding:18px;
-border-radius:16px;
-margin-bottom:15px;
-box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    background: var(--card-bg);
+    padding:20px;
+    border-radius:20px;
+    margin-bottom:20px;
+    border: 1px solid rgba(255,255,255,0.05);
+    animation: fadeIn 0.4s ease-out;
 }
 
-input,select,button{
-width:100%;
-padding:12px;
-margin-top:10px;
-border-radius:10px;
-border:none;
-outline: none;
-box-sizing: border-box;
-font-size: 14px;
+input, select, button {
+    width:100%;
+    padding:14px;
+    margin-top:10px;
+    border-radius:12px;
+    border:none;
+    outline: none;
+    box-sizing: border-box;
+    font-size: 15px;
+    transition: all 0.2s ease;
 }
 
-input,select{background: var(--input-bg); color:white; border: 1px solid #1e293b;}
+input, select { background: var(--input-bg); color:white; border: 1px solid #1e293b; }
+input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2); }
 
-button{
-background: var(--accent);
-color: white;
-font-weight:bold;
-cursor:pointer;
-transition: all 0.2s;
-}
-
-button:hover { background: var(--accent-hover); }
-button:active { transform: scale(0.98); }
-
-.exercise{
-background: var(--input-bg);
-padding:15px;
-border-radius:14px;
-margin-top:12px;
-cursor: grab;
-border: 1px solid #1e293b;
-}
-
-.set{
-display:flex;
-align-items:center;
-justify-content:space-between;
-padding:8px;
-margin-top:8px;
-background: var(--bg);
-border-radius:10px;
-gap: 10px;
-}
-
-.set-inputs {
+button {
+    background: var(--accent);
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 5px;
+    justify-content: center;
+    gap: 8px;
 }
 
-.set input {
-    width: 55px;
-    background: #1e293b;
-    text-align: center;
-    border: none;
-    margin: 0;
-    padding: 8px 5px;
-    border-radius: 6px;
+button:hover { background: var(--accent-hover); transform: translateY(-1px); }
+button:active { transform: translateY(1px); }
+
+.exercise {
+    background: var(--input-bg);
+    padding:18px;
+    border-radius:16px;
+    margin-top:15px;
+    border-left: 4px solid var(--accent);
 }
 
-/* Кнопка Виконано - Ширша версія */
+.set {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:10px;
+    margin-top:8px;
+    background: rgba(255,255,255,0.03);
+    border-radius:12px;
+}
+
+.set-inputs { display: flex; align-items: center; gap: 8px; }
+.set input { width: 60px; padding: 8px; background: #1e293b; border: none; text-align: center; }
+
 .done-btn {
-    width: 60px !important; 
+    width: 65px !important;
+    height: 40px;
     margin: 0 !important;
-    padding: 8px !important;
-    font-size: 16px !important;
-    flex-shrink: 0;
+    background: #1e293b;
+    color: #94a3b8;
 }
 
-.set.done{
-text-decoration:line-through;
-opacity:0.3;
-background: #060a13;
-}
+.set.done .done-btn { background: var(--success); color: white; }
+.set.done { opacity: 0.5; }
 
-.deleteBtn{
-background: transparent;
-color: var(--danger);
-border: 1px solid var(--danger);
-margin-top:12px;
+.timer-float {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--accent);
+    padding: 10px 25px;
+    border-radius: 50px;
+    display: flex;
+    gap: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    z-index: 1000;
+    font-weight: bold;
 }
-.deleteBtn:hover { background: var(--danger); color: white; }
-
-.timer, .restBox{
-position:fixed;
-right:15px;
-background: var(--card-bg);
-padding:12px;
-border-radius:14px;
-font-size:13px;
-font-weight: bold;
-z-index: 100;
-box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
-}
-
-.timer { top:15px; border: 1px solid var(--accent); color: var(--accent); }
-.restBox { top:80px; border: 1px solid #a78bfa; color: #a78bfa; }
 
 .modal{
-position:fixed;
-inset:0;
-background: rgba(0,0,0,0.85);
-display:none;
-align-items:center;
-justify-content:center;
-z-index: 1000;
-backdrop-filter: blur(4px);
+    position:fixed;
+    inset:0;
+    background: rgba(0,0,0,0.9);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    z-index: 2000;
+    backdrop-filter: blur(8px);
 }
 
 .modal-content{
-background: var(--card-bg);
-padding:25px;
-border-radius:20px;
-width:85%;
-max-width: 400px;
+    background: var(--card-bg);
+    padding:30px;
+    border-radius:24px;
+    width:90%;
+    max-width: 450px;
 }
 
-.small{font-size:12px; opacity:0.6; margin-top: 5px;}
-.close{background: #374151; margin-top:15px;}
-
-#dateInfo {
-text-align:center;
-font-size:15px;
-color: var(--accent);
-font-weight: 500;
-}
-
-#result {
-    line-height: 1.5;
-    font-size: 14px;
-    padding: 10px;
-    border-radius: 8px;
-    background: #0f172a;
+#chartContainer {
+    margin-top: 20px;
+    height: 250px;
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">🏋️ Pro-Fit Tracker</div>
+<div class="header">PRO-FIT TRACKER</div>
 
-<div class="card" id="dateInfo">📅 Завантаження...</div>
-
-<div class="timer" id="timerBox">⏱ 00:00</div>
-<div class="restBox" id="restBox">⏳ Відпочинок</div>
+<div class="timer-float" id="floater" style="display:none;">
+    <span id="mainT">⏱ 00:00</span>
+    <span id="restT" style="color: #bfdbfe;">⏳ Готово</span>
+</div>
 
 <div class="container">
 
-<div class="card">
-    <input type="date" id="date">
-</div>
+    <div class="card">
+        <input type="date" id="date">
+        <div id="dateDisplay" style="text-align:center; margin-top:10px; font-weight:600; color: var(--accent);"></div>
+    </div>
 
-<div class="card">
-    <div style="display:flex; gap:10px;">
-        <div style="flex:1">
-            <div class="small">Відпочинок (сек)</div>
-            <input id="restSet" type="number" value="90">
-        </div>
-        <div style="flex:1">
-            <div class="small">Між вправами</div>
-            <input id="restEx" type="number" value="180">
+    <div class="card">
+        <h3 style="margin:0">📈 Прогрес ваги</h3>
+        <div id="chartContainer">
+            <canvas id="myChart"></canvas>
         </div>
     </div>
-</div>
 
-<div class="card">
-    <h3 style="margin-top:0">➕ Додати вправу</h3>
-    <input id="name" placeholder="Назва вправи">
-    <div style="display:flex; gap:8px;">
-        <input id="sets" type="number" placeholder="Підходи">
-        <input id="reps" type="number" placeholder="Повтори">
-        <input id="weight" type="number" placeholder="Вага (кг)">
+    <div class="card">
+        <div style="display:flex; gap:10px;">
+            <div style="flex:1">
+                <div style="font-size:11px; opacity:0.6">ВІДПОЧИНОК (С)</div>
+                <input id="restSet" type="number" value="90">
+            </div>
+            <div style="flex:1">
+                <div style="font-size:11px; opacity:0.6">МІЖ ВПРАВАМИ (С)</div>
+                <input id="restEx" type="number" value="180">
+            </div>
+        </div>
     </div>
-    <button onclick="add()">Додати вправу</button>
-</div>
 
-<div class="card">
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-        <button onclick="start()">▶ Старт</button>
-        <button onclick="finish()" style="background:#10b981">🏁 Фініш</button>
-        <button onclick="copyDay()" style="background:#4b5563">📋 Копія</button>
-        <button onclick="pasteDay()" style="background:#4b5563">📥 Вставити</button>
+    <div class="card">
+        <h3 style="margin-top:0">➕ Нова вправа</h3>
+        <input id="name" placeholder="Назва (напр. Присідання)">
+        <div style="display:flex; gap:10px;">
+            <input id="sets" type="number" placeholder="Підходи">
+            <input id="reps" type="number" placeholder="Повтори">
+            <input id="weight" type="number" placeholder="Вага">
+        </div>
+        <button onclick="add()">ДОДАТИ ДО ПЛАНУ</button>
     </div>
-    <button onclick="clearDay()" style="background:#ef4444; margin-top:10px;">🗑 Очистити цей день</button>
-</div>
 
-<div id="list"></div>
+    <div class="card" style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+        <button onclick="start()" style="background: var(--success)">▶ СТАРТ</button>
+        <button onclick="finish()" style="background: #6366f1">🏁 ФІНІШ</button>
+        <button onclick="copyDay()" style="background:#334155">📋 КОПІЯ</button>
+        <button onclick="pasteDay()" style="background:#334155">📥 ВСТАВИТИ</button>
+        <button onclick="clearDay()" style="background:var(--danger); grid-column: span 2;">🗑 ОЧИСТИТИ ДЕНЬ</button>
+    </div>
 
+    <div id="list"></div>
 </div>
 
 <div class="modal" id="modal">
     <div class="modal-content">
-        <h2 style="margin-top:0">🧠 AI Аналіз</h2>
-        
-        <div class="small">Наскільки важким було тренування? (1-10)</div>
-        <input id="q1" type="number" min="1" max="10" value="7">
-
-        <div class="small">Чи були підходи до повної відмови?</div>
+        <h2 style="margin-top:0">🧠 AI Аналіз тренування</h2>
+        <div style="font-size:12px; opacity:0.7">Важкість за шкалою RPE (1-10)</div>
+        <input id="q1" type="number" value="7">
+        <div style="font-size:12px; opacity:0.7; margin-top:10px;">Відмова м'язів?</div>
         <select id="q2">
             <option value="no">Ні, був запас</option>
-            <option value="yes">Так, в останніх підходах</option>
-            <option value="hardcore">Так, у кожному підході</option>
+            <option value="yes">Так, в кінці</option>
+            <option value="hardcore">Повна відмова</option>
         </select>
-
-        <div class="small">Ваш рівень енергії зараз?</div>
-        <select id="q3">
-            <option value="low">Виснажений (Low)</option>
-            <option value="mid">Нормальний (Mid)</option>
-            <option value="high">Бадьорий (High)</option>
-        </select>
-
-        <button onclick="getAI()" style="margin-top:20px;">Отримати рекомендацію</button>
-        <div id="result" style="margin-top:15px; color:#93c5fd; min-height: 40px;"></div>
-        <button class="close" onclick="closeAI()">Закрити</button>
+        <button onclick="getAI()" style="margin-top:20px;">АНАЛІЗУВАТИ</button>
+        <div id="result" style="margin-top:15px; padding:12px; background: #0f172a; border-radius:10px; font-size:14px; color: #93c5fd;"></div>
+        <button onclick="closeAI()" style="background:#374151; margin-top:10px;">ЗАКРИТИ</button>
     </div>
 </div>
 
 <script>
 let data = JSON.parse(localStorage.getItem("fit")) || {};
-let date="";
-let active=false;
-let startTime=null;
-let mainTimer=null;
-let restTimer=null;
-let done={};
-let draggedItemIndex = null;
+let date = "";
+let timerActive = false;
+let startTime = null;
+let mainInt, restInt;
+let done = {};
+let draggedIdx = null;
+let myChart = null;
 
-document.getElementById("date").onchange=(e)=>{
-    date=e.target.value;
-    render();
-    updateDateInfo();
+// Аудіо для таймера (короткий сигнал)
+const beep = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
+
+document.getElementById("date").onchange = (e) => {
+    date = e.target.value;
+    updateUI();
 };
 
-function save(){ localStorage.setItem("fit",JSON.stringify(data)); }
+function save() { localStorage.setItem("fit", JSON.stringify(data)); }
 
-function add(){
-    let d=document.getElementById("date").value;
-    let n=document.getElementById("name");
-    let s=document.getElementById("sets");
-    let r=document.getElementById("reps");
-    let w=document.getElementById("weight");
-
-    if(!d || !n.value || !s.value) return;
-    if(!data[d]) data[d]=[];
-
-    let arr=[];
-    for(let i=0; i<+s.value; i++){
-        arr.push({r: +r.value || 0, w: +w.value || 0});
-    }
-
-    data[d].push({name: n.value, arr});
-    save();
+function updateUI() {
     render();
+    updateDateDisplay();
+    updateChart();
+}
 
+function updateDateDisplay() {
+    let d = new Date(date || new Date());
+    let days = ["Неділя","Понеділок","Вівторок","Середа","Четвер","П’ятниця","Субота"];
+    document.getElementById("dateDisplay").innerText = days[d.getDay()];
+}
+
+function add() {
+    let n = document.getElementById("name"), s = document.getElementById("sets"), r = document.getElementById("reps"), w = document.getElementById("weight");
+    if(!date || !n.value || !s.value) return;
+    if(!data[date]) data[date] = [];
+    
+    let arr = [];
+    for(let i=0; i<+s.value; i++) arr.push({r: +r.value || 0, w: +w.value || 0});
+    
+    data[date].push({name: n.value, arr});
+    save();
+    updateUI();
     n.value=""; s.value=""; r.value=""; w.value="";
 }
 
-function drag(ev, index) { draggedItemIndex = index; ev.dataTransfer.setData("text", index); }
-function allowDrop(ev) { ev.preventDefault(); }
-function drop(ev, targetIndex) {
-    ev.preventDefault();
-    const movedItem = data[date].splice(draggedItemIndex, 1)[0];
-    data[date].splice(targetIndex, 0, movedItem);
-    save(); render();
-}
-
-function updateWeight(exIdx, setIdx, val) { data[date][exIdx].arr[setIdx].w = +val; save(); }
-function updateReps(exIdx, setIdx, val) { data[date][exIdx].arr[setIdx].r = +val; save(); }
-
-function clearDay() {
-    if(confirm("Видалити всі дані за сьогодні?")) { data[date] = []; save(); render(); }
-}
-
-function copyDay(){
-    if(!data[date]) return;
-    localStorage.setItem("copiedDay", JSON.stringify(data[date]));
-    alert("Дані дня скопійовано");
-}
-
-function pasteDay(){
-    let c = localStorage.getItem("copiedDay");
-    if(!c) return;
-    data[date] = JSON.parse(c);
-    save(); render();
-}
-
-function updateDateInfo(){
-    let d = new Date(date || new Date());
-    let days = ["Неділя","Понеділок","Вівторок","Середа","Четвер","П’ятниця","Субота"];
-    document.getElementById("dateInfo").innerText = `📅 ${date} | ${days[d.getDay()]}`;
-}
-
-function start(){
-    active=true; done={}; startTime=new Date();
-    if(mainTimer) clearInterval(mainTimer);
-    mainTimer = setInterval(()=>{
-        let diff = Math.floor((new Date()-startTime)/1000);
-        let m=Math.floor(diff/60), s=diff%60;
-        document.getElementById("timerBox").innerText = `⏱ ${m}:${s<10?'0':''}${s}`;
+function start() {
+    timerActive = true;
+    startTime = new Date();
+    document.getElementById("floater").style.display = "flex";
+    clearInterval(mainInt);
+    mainInt = setInterval(() => {
+        let diff = Math.floor((new Date() - startTime)/1000);
+        let m = Math.floor(diff/60), s = diff%60;
+        document.getElementById("mainT").innerText = `⏱ ${m}:${s<10?'0':''}${s}`;
     }, 1000);
 }
 
-function showRest(sec){
-    let t=sec; clearInterval(restTimer);
-    restTimer = setInterval(()=>{
-        document.getElementById("restBox").innerText = `⏳ ${t}s`;
+function showRest(sec) {
+    let t = sec;
+    clearInterval(restInt);
+    document.getElementById("restT").style.color = "#fff";
+    restInt = setInterval(() => {
+        document.getElementById("restT").innerText = `⏳ ${t}s`;
         t--;
-        if(t<0){ clearInterval(restTimer); document.getElementById("restBox").innerText = "⏳ Готово!"; }
-    },1000);
+        if(t < 0) {
+            clearInterval(restInt);
+            document.getElementById("restT").innerText = "⏳ Готово!";
+            document.getElementById("restT").style.color = "#10b981";
+            beep.play(); // Звуковий сигнал
+            if (navigator.vibrate) navigator.vibrate(200); // Вібрація
+        }
+    }, 1000);
 }
 
-function doneSet(i,j,last){
-    let key = i+"-"+j;
+function doneSet(i, j, last) {
+    let key = i + "-" + j;
     done[key] = !done[key];
-    if(done[key]){
-        let sVal = +document.getElementById("restSet").value;
-        let eVal = +document.getElementById("restEx").value;
-        showRest(last ? eVal : sVal);
+    if(done[key]) {
+        let s = +document.getElementById("restSet").value;
+        let e = +document.getElementById("restEx").value;
+        showRest(last ? e : s);
     }
     render();
 }
 
-function finish(){
-    clearInterval(mainTimer);
-    document.getElementById("modal").style.display="flex";
-}
+function updateChart() {
+    const ctx = document.getElementById('myChart').getContext('2d');
+    let labels = [], weights = [];
+    
+    // Беремо останні 7 записів, де є тренування
+    let sortedDates = Object.keys(data).sort().slice(-7);
+    sortedDates.forEach(d => {
+        labels.push(d.split("-").slice(1).join("/"));
+        let maxW = 0;
+        data[d].forEach(ex => ex.arr.forEach(s => { if(s.w > maxW) maxW = s.w; }));
+        weights.push(maxW);
+    });
 
-function getAI(){
-    let rpe = +document.getElementById("q1").value;
-    let fail = document.getElementById("q2").value;
-    let energy = document.getElementById("q3").value;
-    let msg = "";
-
-    if(rpe >= 9 || fail === "hardcore"){
-        msg = "⚠️ <b>Центральна нервова система виснажена.</b> Наступне тренування зробіть 'легким' (зменште вагу на 20%). Дайте тілу 48 годин на відновлення.";
-    } else if (energy === "high" && rpe < 8){
-        msg = "🚀 <b>Потенціал для прогресу!</b> Ви почуваєтесь добре. На наступному тренуванні спробуйте додати +2.5 кг або зробіть на 2 повторення більше.";
-    } else if (energy === "low"){
-        msg = "💤 <b>Пріоритет на відновлення.</b> Зверніть увагу на сон та кількість білка. Сьогодні ви відпрацювали добре, але не тисніть на максимум завтра.";
-    } else {
-        msg = "✅ <b>Стабільний режим.</b> Навантаження підібрано ідеально. Продовжуйте працювати за цим планом ще 1-2 тижні перед підвищенням ваги.";
-    }
-
-    document.getElementById("result").innerHTML = msg;
-}
-
-function closeAI(){ document.getElementById("modal").style.display="none"; }
-
-function deleteExercise(i){
-    data[date].splice(i,1);
-    save(); render();
-}
-
-function render(){
-    let listEl = document.getElementById("list");
-    listEl.innerHTML="";
-    if(!data[date]) return;
-
-    data[date].forEach((e,i)=>{
-        let setsHTML=e.arr.map((s,j)=>`
-        <div class="set ${done[i+"-"+j]?'done':''}">
-            <div class="set-inputs">
-                <input type="number" value="${s.r}" onchange="updateReps(${i},${j},this.value)"> 
-                <span>x</span> 
-                <input type="number" value="${s.w}" onchange="updateWeight(${i},${j},this.value)"> 
-                <span style="font-size: 12px; opacity: 0.7;">кг</span>
-            </div>
-            <button class="done-btn" onclick="doneSet(${i},${j},${j===e.arr.length-1})">✔</button>
-        </div>
-        `).join("");
-
-        listEl.innerHTML+=`
-        <div class="card exercise" draggable="true" ondragstart="drag(event, ${i})" ondragover="allowDrop(event)" ondrop="drop(event, ${i})">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <b style="color: var(--accent)">${e.name}</b>
-                <span style="font-size:12px; opacity:0.4;">☰</span>
-            </div>
-            ${setsHTML}
-            <button class="deleteBtn" onclick="deleteExercise(${i})">🗑 Видалити</button>
-        </div>`;
+    if(myChart) myChart.destroy();
+    myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Макс. вага (кг)',
+                data: weights,
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                fill: true,
+                tension: 0.4,
+                borderWidth: 3,
+                pointRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } },
+                x: { grid: { display: false }, ticks: { color: '#64748b' } }
+            }
+        }
     });
 }
 
+function render() {
+    let listEl = document.getElementById("list");
+    listEl.innerHTML = "";
+    if(!data[date]) return;
+
+    data[date].forEach((e, i) => {
+        let setsHTML = e.arr.map((s, j) => `
+            <div class="set ${done[i+"-"+j]?'done':''}">
+                <div class="set-inputs">
+                    <input type="number" value="${s.r}" onchange="edit(${i},${j},'r',this.value)">
+                    <span style="opacity:0.5">×</span>
+                    <input type="number" value="${s.w}" onchange="edit(${i},${j},'w',this.value)">
+                    <span style="font-size:11px; opacity:0.5">кг</span>
+                </div>
+                <button class="done-btn" onclick="doneSet(${i},${j},${j===e.arr.length-1})">✔</button>
+            </div>
+        `).join("");
+
+        listEl.innerHTML += `
+            <div class="exercise">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <b style="font-size:16px;">${e.name}</b>
+                    <button onclick="delEx(${i})" style="width:35px; background:none; color:var(--danger); padding:0;">✕</button>
+                </div>
+                ${setsHTML}
+            </div>
+        `;
+    });
+}
+
+function edit(exI, setI, prop, val) { data[date][exI].arr[setI][prop] = +val; save(); updateChart(); }
+function delEx(i) { data[date].splice(i,1); save(); updateUI(); }
+function finish() { clearInterval(mainInt); document.getElementById("modal").style.display="flex"; }
+function closeAI() { document.getElementById("modal").style.display="none"; }
+
+function getAI() {
+    let rpe = +document.getElementById("q1").value;
+    let fail = document.getElementById("q2").value;
+    let res = document.getElementById("result");
+    if(rpe >= 9) res.innerHTML = "🔥 <b>Висока інтенсивність!</b> Тілу потрібно більше часу на відновлення. Наступне тренування зробіть легшим.";
+    else if(rpe < 7 && fail === "no") res.innerHTML = "💪 <b>Є запас!</b> Наступного разу спробуйте додати 2.5кг або виконати на 2 повтори більше.";
+    else res.innerHTML = "✅ <b>Ідеальний темп.</b> Ви в 'золотій середині' для росту м'язів.";
+}
+
+function clearDay() { if(confirm("Видалити тренування?")) { data[date]=[]; save(); updateUI(); } }
+function copyDay() { localStorage.setItem("copy", JSON.stringify(data[date])); alert("Скопійовано!"); }
+function pasteDay() { let c = localStorage.getItem("copy"); if(c) { data[date]=JSON.parse(c); save(); updateUI(); } }
+
+// Init
 (()=>{
-    let today=new Date().toISOString().split("T")[0];
-    date=today;
-    document.getElementById("date").value=today;
-    render();
-    updateDateInfo();
+    let today = new Date().toISOString().split("T")[0];
+    date = today;
+    document.getElementById("date").value = today;
+    updateUI();
 })();
 </script>
 </body>
