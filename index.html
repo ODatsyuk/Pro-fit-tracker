@@ -3,9 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Pro-Fit Tracker | Elite PDF Edition</title>
+<title>Pro-Fit Elite | Tonnage & Tempo</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<!-- Бібліотека для PDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
@@ -19,37 +18,42 @@
     --warning: #f59e0b;
 }
 
-body { margin:0; font-family: 'Inter', sans-serif; background: var(--bg); color:white; padding-bottom: 80px; }
-.header { padding:20px; text-align:center; font-size:22px; font-weight:800; color: var(--accent); letter-spacing: 1px; }
+body { margin:0; font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg); color:white; padding-bottom: 100px; }
+.header { padding:20px; text-align:center; font-size:22px; font-weight:800; color: var(--accent); }
 .container { padding:15px; max-width: 600px; margin: 0 auto; }
-.card { background: var(--card-bg); padding:20px; border-radius:20px; margin-bottom:15px; border: 1px solid rgba(255,255,255,0.05); }
+.card { background: var(--card-bg); padding:18px; border-radius:20px; margin-bottom:15px; border: 1px solid rgba(255,255,255,0.05); }
 
-input, select, button, textarea { width:100%; padding:12px; margin-top:10px; border-radius:12px; border:none; outline: none; box-sizing: border-box; font-size: 15px; }
+/* Progress Bar */
+.progress-container { height: 6px; background: #1e293b; border-radius: 3px; margin-bottom: 20px; overflow: hidden; }
+#p-bar { height: 100%; width: 0%; background: var(--success); transition: 0.5s; }
+
+input, select, button, textarea { width:100%; padding:12px; margin-top:8px; border-radius:12px; border:none; outline: none; box-sizing: border-box; font-size: 14px; }
 input, select, textarea { background: var(--input-bg); color:white; border: 1px solid #1e293b; }
-textarea { resize: none; height: 80px; font-family: inherit; }
+textarea { resize: none; height: 60px; }
 button { background: var(--accent); color: white; font-weight: 700; cursor: pointer; transition: 0.2s; }
-button:active { transform: scale(0.98); }
+button:active { transform: scale(0.97); }
 
-.exercise { background: var(--input-bg); padding:15px; border-radius:16px; margin-top:12px; border: 1px solid #1e293b; position: relative; }
+.exercise { background: var(--input-bg); padding:15px; border-radius:16px; margin-top:12px; border: 1px solid #1e293b; }
 .set { display:flex; align-items:center; justify-content:space-between; padding:8px; margin-top:8px; background: rgba(255,255,255,0.03); border-radius:10px; }
 .set-inputs { display: flex; gap: 5px; align-items: center; }
-.set input { width: 55px; padding: 6px; background: #1e293b; border: none; text-align: center; margin: 0;}
-.done-btn { width: 60px !important; margin: 0 !important; background: #1e293b; color: white; }
-.set.done { opacity: 0.4; text-decoration: line-through; }
-.set.done .done-btn { background: var(--success); color: white; }
+.set input { width: 50px; padding: 6px; background: #1e293b; text-align: center; margin: 0;}
+.done-btn { width: 50px !important; margin: 0 !important; background: #1e293b; font-size: 12px; }
+.set.done { opacity: 0.3; }
+.set.done .done-btn { background: var(--success); }
 
-.timer-float { position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); background: var(--accent); padding: 12px 25px; border-radius: 50px; display: flex; gap: 20px; z-index: 1000; font-weight: bold; box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
+.timer-float { position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); background: var(--accent); padding: 12px 25px; border-radius: 50px; display: flex; gap: 15px; z-index: 1000; box-shadow: 0 5px 25px rgba(0,0,0,0.6); }
 .modal { position:fixed; inset:0; background: rgba(0,0,0,0.9); display:none; align-items:center; justify-content:center; z-index: 2000; }
-.modal-content { background: var(--card-bg); padding:25px; border-radius:24px; width:90%; max-width: 450px; overflow-y: auto; max-height: 85vh; }
-#chartBox { height: 200px; margin-top: 10px; }
-.info-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--warning); margin-bottom: 5px; }
+.modal-content { background: var(--card-bg); padding:25px; border-radius:24px; width:85%; max-height: 80vh; overflow-y: auto; }
 
-.split-btn { flex: 1; background: #1e293b; font-size: 11px; padding: 8px; border: 1px solid var(--accent); color: var(--accent); }
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.stat-box { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 12px; text-align: center; }
+.stat-label { font-size: 10px; color: #94a3b8; text-transform: uppercase; }
+.stat-value { font-size: 16px; font-weight: bold; color: var(--warning); }
 </style>
 </head>
 
 <body>
-<div class="header">PRO-FIT TRACKER</div>
+<div class="header">PRO-FIT ELITE</div>
 
 <div class="timer-float" id="floater" style="display:none;">
     <span id="mainT">⏱ 00:00</span>
@@ -57,55 +61,59 @@ button:active { transform: scale(0.98); }
 </div>
 
 <div class="container">
+    <div class="progress-container"><div id="p-bar"></div></div>
+
     <div class="card">
         <input type="date" id="date">
-        <textarea id="dayNotes" placeholder="Нотатки до тренування..." onchange="saveNotes()"></textarea>
+        <div class="stats-grid" style="margin-top:10px;">
+            <div class="stat-box">
+                <div class="stat-label">Загальний тоннаж</div>
+                <div class="stat-value" id="totalVolume">0 кг</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Кращий 1ПМ</div>
+                <div class="stat-value" id="topOnePM">0 кг</div>
+            </div>
+        </div>
+        <textarea id="dayNotes" placeholder="Настрої, самопочуття, музика..." onchange="saveNotes()"></textarea>
     </div>
 
     <div class="card">
-        <h3 style="margin:0 0 5px 0">📈 Аналітика та PR</h3>
-        <div class="info-row">
-            <span id="prDisplay">🏆 PR: -</span>
-            <span id="onePM">🎯 1ПМ: -</span>
-        </div>
-        <select id="chartExSelect" onchange="updateChart()">
-            <option value="">Виберіть вправу</option>
-        </select>
-        <div id="chartBox">
-            <canvas id="myChart"></canvas>
-        </div>
+        <h3 style="margin:0 0 10px 0; font-size:16px;">📈 Аналітика прогресу</h3>
+        <select id="chartExSelect" onchange="updateChart()"></select>
+        <div id="chartBox" style="height:180px;"><canvas id="myChart"></canvas></div>
     </div>
 
     <div class="card">
-        <h3 style="margin-top:0; font-size:14px; color:var(--accent);">⚡ Швидкі шаблони (Спліти)</h3>
+        <h3 style="margin-top:0; font-size:14px; color:var(--accent);">⚡ Швидкий старт</h3>
         <div style="display:flex; gap:5px;">
-            <button class="split-btn" onclick="applySplit('push')">PUSH (Жим)</button>
-            <button class="split-btn" onclick="applySplit('pull')">PULL (Тяга)</button>
-            <button class="split-btn" onclick="applySplit('legs')">LEGS (Ноги)</button>
+            <button onclick="applySplit('Верх')">ВЕРХ</button>
+            <button onclick="applySplit('Низ')">НИЗ</button>
+            <button onclick="applySplit('Full')">FULL</button>
         </div>
     </div>
 
     <div class="card">
-        <h3 style="margin-top:0">➕ Додати вправу</h3>
-        <input id="name" list="popular-exercises" placeholder="Назва вправи">
-        <datalist id="popular-exercises">
-            <option value="Жим лежачи"><option value="Присідання"><option value="Станова тяга"><option value="Підтягування"><option value="Армійський жим"><option value="Бруси"><option value="Тяга в нахилі">
+        <h3 style="margin-top:0">➕ Нова вправа</h3>
+        <input id="name" list="popular" placeholder="Назва (напр. Жим)">
+        <datalist id="popular">
+            <option value="Жим лежачи"><option value="Присідання"><option value="Станова тяга"><option value="Підтягування">
         </datalist>
-        <div style="display:flex; gap:8px;">
+        <div style="display:flex; gap:5px;">
             <input id="sets" type="number" placeholder="Сети">
             <input id="reps" type="number" placeholder="Повт">
             <input id="weight" type="number" placeholder="кг">
         </div>
-        <button onclick="add()">ДОДАТИ</button>
+        <input id="tempo" placeholder="Темп (напр. 3-1-1-0)" style="margin-top:5px;">
+        <button onclick="add()">ДОДАТИ В ПЛАН</button>
     </div>
 
     <div class="card" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
         <button onclick="start()" style="background: var(--success)">▶ СТАРТ</button>
         <button onclick="finish()" style="background: #6366f1">🏁 ФІНІШ</button>
-        <button onclick="showHistory()" style="background: var(--warning); grid-column: span 2;">📊 ПОРІВНЯННЯ ТА ІСТОРІЯ</button>
-        <button onclick="copyDay()">📋 КОПІЯ</button>
-        <button onclick="pasteDay()">📥 ВСТАВИТИ</button>
-        <button onclick="generatePDF()" style="background: #ef4444; grid-column: span 2;">📄 ЕКСПОРТ ВСІЄЇ ІСТОРІЇ В PDF</button>
+        <button onclick="generatePDF()" style="background: var(--danger); grid-column: span 2;">📄 ЕКСПОРТ PDF ЗВІТУ</button>
+        <button onclick="copyDay()">📋 COPY</button>
+        <button onclick="pasteDay()">📥 PASTE</button>
     </div>
 
     <div id="list"></div>
@@ -113,9 +121,9 @@ button:active { transform: scale(0.98); }
 
 <div class="modal" id="modal">
     <div class="modal-content">
-        <h2 id="modalTitle" style="margin:0">🏁 Тренування закінчено</h2>
-        <div id="result" style="margin-top:15px; color: #93c5fd; font-size: 16px;"></div>
-        <button onclick="closeModal()" style="background:#374151; margin-top:20px;">ЗАКРИТИ</button>
+        <h2 style="margin:0">🏁 Тренування завершено!</h2>
+        <div id="summaryResult" style="margin:15px 0; font-size:14px; line-height:1.6;"></div>
+        <button onclick="document.getElementById('modal').style.display='none'">ЗАКРИТИ</button>
     </div>
 </div>
 
@@ -126,8 +134,7 @@ let notes = JSON.parse(localStorage.getItem("fit_notes")) || {};
 let date = "";
 let startTime = null;
 let currentDuration = "00:00";
-let mainInt, restInt;
-let done = {};
+let mainInt, restInt, done = {};
 let myChart = null;
 
 const beep = new Audio('https://actions.google.com/sounds/v1/alarms/beep_short.ogg');
@@ -144,214 +151,200 @@ function save() {
     localStorage.setItem("fit_notes", JSON.stringify(notes));
 }
 
-function saveNotes() {
-    notes[date] = document.getElementById("dayNotes").value;
-    save();
-}
+function saveNotes() { notes[date] = document.getElementById("dayNotes").value; save(); }
 
 function updateUI() {
     render();
     fillChartSelect();
     updateChart();
+    calcVolume();
 }
 
 function fillChartSelect() {
     let select = document.getElementById("chartExSelect");
-    let currentVal = select.value;
-    let exercisesSet = new Set();
-    Object.values(data).forEach(day => day.forEach(ex => exercisesSet.add(ex.name)));
-    select.innerHTML = '<option value="">Виберіть вправу</option>';
-    exercisesSet.forEach(ex => {
-        let opt = document.createElement("option");
-        opt.value = ex; opt.innerText = ex;
-        select.appendChild(opt);
-    });
-    select.value = currentVal;
+    let oldVal = select.value;
+    let exs = new Set();
+    Object.values(data).forEach(day => day.forEach(e => exs.add(e.name)));
+    select.innerHTML = '<option value="">Оберіть вправу для аналізу</option>';
+    exs.forEach(e => select.innerHTML += `<option value="${e}">${e}</option>`);
+    select.value = oldVal;
 }
 
-function add(customName, customS, customR, customW) {
-    let n = customName || document.getElementById("name").value;
-    let s = customS || document.getElementById("sets").value;
-    let r = customR || document.getElementById("reps").value;
-    let w = customW || document.getElementById("weight").value;
+function calcVolume() {
+    if(!data[date]) return;
+    let vol = 0;
+    data[date].forEach(ex => ex.arr.forEach(s => vol += (s.w * s.r)));
+    document.getElementById("totalVolume").innerText = vol + " кг";
     
+    // Progress Bar
+    let totalSets = 0, doneSets = 0;
+    data[date].forEach((ex, i) => {
+        totalSets += ex.arr.length;
+        ex.arr.forEach((s, j) => { if(done[i+'-'+j]) doneSets++; });
+    });
+    document.getElementById("p-bar").style.width = totalSets > 0 ? (doneSets/totalSets*100)+"%" : "0%";
+}
+
+function add(cN, cS, cR, cW, cT) {
+    let n = cN || document.getElementById("name").value;
+    let s = cS || document.getElementById("sets").value;
+    let r = cR || document.getElementById("reps").value;
+    let w = cW || document.getElementById("weight").value;
+    let t = cT || document.getElementById("tempo").value || "за замовчуванням";
+
     if(!date || !n || !s) return;
     if(!data[date]) data[date] = [];
-    let arr = [];
-    for(let i=0; i<+s; i++) arr.push({r: +r || 0, w: +w || 0});
-    data[date].push({name: n, arr});
+    let sets = [];
+    for(let i=0; i<+s; i++) sets.push({r: +r, w: +w});
+    data[date].push({name: n, arr: sets, tempo: t});
     save(); updateUI();
     
-    if(!customName) {
-        document.getElementById("name").value = "";
-        document.getElementById("sets").value = "";
-        document.getElementById("reps").value = "";
-        document.getElementById("weight").value = "";
+    if(!cN) { 
+        document.getElementById("name").value = ""; 
+        document.getElementById("sets").value = ""; 
+        document.getElementById("tempo").value = "";
     }
 }
 
-// Функція швидких сплітів
 function applySplit(type) {
-    const plans = {
-        push: [['Жим штанги', 3, 10, 0], ['Армійський жим', 3, 10, 0], ['Бруси', 3, 12, 0]],
-        pull: [['Підтягування', 3, 8, 0], ['Тяга в нахилі', 3, 10, 0], ['Біцепс', 3, 12, 0]],
-        legs: [['Присідання', 3, 10, 0], ['Випади', 3, 12, 0], ['Прес', 3, 20, 0]]
+    const s = {
+        'Верх': [['Жим лежачи', 3, 10, 40, '3-0-1-0'], ['Тяга в нахилі', 3, 10, 30, '2-1-1-0']],
+        'Низ': [['Присідання', 3, 10, 50, '3-1-1-0'], ['Мертва тяга', 3, 10, 60, '2-0-1-0']],
+        'Full': [['Присідання', 3, 10, 40, '3-1-1-0'], ['Жим штанги', 3, 10, 40, '3-0-1-0'], ['Підтягування', 3, 8, 0, '2-1-1-0']]
     };
-    plans[type].forEach(ex => add(ex[0], ex[1], ex[2], ex[3]));
+    s[type].forEach(x => add(x[0], x[1], x[2], x[3], x[4]));
+}
+
+function render() {
+    let l = document.getElementById("list");
+    l.innerHTML = "";
+    if(!data[date]) return;
+
+    data[date].forEach((ex, i) => {
+        let setsH = ex.arr.map((s, j) => `
+            <div class="set ${done[i+'-'+j]?'done':''}">
+                <div class="set-inputs">
+                    <input type="number" value="${s.r}" onchange="edit(${i},${j},'r',this.value)"> 
+                    <small>×</small>
+                    <input type="number" value="${s.w}" onchange="edit(${i},${j},'w',this.value)">
+                </div>
+                <button class="done-btn" onclick="doneSet(${i},${j})">${done[i+'-'+j]?'✔':'OK'}</button>
+            </div>`).join("");
+        
+        l.innerHTML += `
+            <div class="exercise">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <b>${ex.name}</b>
+                    <span style="font-size:10px; opacity:0.6;">⏳ ${ex.tempo}</span>
+                    <button onclick="delEx(${i})" style="width:25px; background:none; color:var(--danger); padding:0; margin:0;">✕</button>
+                </div>
+                ${setsH}
+            </div>`;
+    });
+}
+
+function doneSet(i, j) {
+    done[i+'-'+j] = !done[i+'-'+j];
+    if(done[i+'-'+j]) showRest(90);
+    updateUI();
+}
+
+function showRest(s) {
+    let t = s; clearInterval(restInt);
+    restInt = setInterval(() => {
+        document.getElementById("restT").innerText = `⏳ ${t}s`;
+        if(t-- <= 0) { clearInterval(restInt); beep.play(); document.getElementById("restT").innerText = "ГОТОВО!"; }
+    }, 1000);
+}
+
+function edit(i, j, p, v) { data[date][i].arr[j][p] = +v; save(); updateUI(); }
+function delEx(i) { data[date].splice(i,1); save(); updateUI(); }
+
+function start() {
+    startTime = new Date(); document.getElementById("floater").style.display = "flex";
+    mainInt = setInterval(() => {
+        let d = Math.floor((new Date() - startTime)/1000);
+        currentDuration = `${Math.floor(d/60)}:${(d%60).toString().padStart(2,'0')}`;
+        document.getElementById("mainT").innerText = `⏱ ${currentDuration}`;
+    }, 1000);
+}
+
+function finish() {
+    clearInterval(mainInt);
+    durations[date] = currentDuration;
+    save();
+    let vol = document.getElementById("totalVolume").innerText;
+    document.getElementById("summaryResult").innerHTML = `
+        Час: <b>${currentDuration}</b><br>
+        Сумарна вага: <b>${vol}</b><br>
+        Тренування збережено в історію.
+    `;
+    document.getElementById("modal").style.display = "flex";
 }
 
 function updateChart() {
     const ctx = document.getElementById('myChart').getContext('2d');
-    const selectedEx = document.getElementById("chartExSelect").value;
-    if(!selectedEx || !ctx) return;
-    
-    let labels = [], weights = [], onePMs = [];
-    let maxEver = 0;
+    const sel = document.getElementById("chartExSelect").value;
+    if(!sel || !ctx) return;
 
+    let labs = [], wts = [], e1pms = [];
     Object.keys(data).sort().forEach(d => {
-        let dayEx = data[d].find(ex => ex.name === selectedEx);
-        if(dayEx) {
-            labels.push(d.split("-").slice(1).join("/"));
-            let dayMax = Math.max(...dayEx.arr.map(s => s.w));
-            let bestSet = dayEx.arr.reduce((p, c) => (p.w > c.w) ? p : c);
-            let e1PM = bestSet.w * (1 + bestSet.r / 30);
-            
-            weights.push(dayMax);
-            onePMs.push(e1PM.toFixed(1));
-            if(dayMax > maxEver) maxEver = dayMax;
+        let e = data[d].find(x => x.name === sel);
+        if(e) {
+            labs.push(d.split('-').slice(1).join('/'));
+            let maxW = Math.max(...e.arr.map(s => s.w));
+            let bestS = e.arr.reduce((a, b) => (a.w > b.w ? a : b));
+            wts.push(maxW);
+            e1pms.push((bestS.w * (1 + bestS.r/30)).toFixed(1));
         }
     });
-
-    document.getElementById("prDisplay").innerText = `🏆 PR: ${maxEver} кг`;
-    document.getElementById("onePM").innerText = `🎯 1ПМ: ${onePMs[onePMs.length-1] || "-"} кг`;
 
     if(myChart) myChart.destroy();
     myChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: labels,
+            labels: labs,
             datasets: [
-                { label: 'Max Вага', data: weights, borderColor: '#3b82f6', tension: 0.3 },
-                { label: '1ПМ', data: onePMs, borderColor: '#f59e0b', borderDash: [5, 5], tension: 0.3 }
+                { label: 'Max Вага', data: wts, borderColor: '#3b82f6', tension: 0.3 },
+                { label: 'Прогноз 1ПМ', data: e1pms, borderColor: '#f59e0b', borderDash: [5,5], tension: 0.3 }
             ]
         },
         options: { responsive: true, maintainAspectRatio: false }
     });
 }
 
-function render() {
-    let listEl = document.getElementById("list");
-    listEl.innerHTML = "";
-    if(!data[date]) return;
-
-    data[date].forEach((e, i) => {
-        let setsHTML = e.arr.map((s, j) => `
-            <div class="set ${done[i+"-"+j]?'done':''}">
-                <div class="set-inputs">
-                    <input type="number" value="${s.r}" onchange="edit(${i},${j},'r',this.value)"> 
-                    <small>×</small>
-                    <input type="number" value="${s.w}" onchange="edit(${i},${j},'w',this.value)"> 
-                    <small>кг</small>
-                </div>
-                <button class="done-btn" onclick="doneSet(${i},${j})">✔</button>
-            </div>`).join("");
-
-        let div = document.createElement("div");
-        div.className = "exercise";
-        div.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center;"><b>${e.name}</b><button onclick="delEx(${i})" style="width:30px; background:none; color:var(--danger);">✕</button></div>${setsHTML}`;
-        listEl.appendChild(div);
-    });
-}
-
-function doneSet(i, j) {
-    let key = i + "-" + j;
-    done[key] = !done[key];
-    if(done[key]) {
-        let isLastSet = (j === data[date][i].arr.length - 1);
-        let isLastEx = (i === data[date].length - 1);
-        if (!(isLastSet && isLastEx)) {
-            showRest(isLastSet ? 180 : 90);
-        }
-    }
-    render();
-}
-
-function showRest(sec) {
-    let t = sec; clearInterval(restInt);
-    restInt = setInterval(() => {
-        document.getElementById("restT").innerText = `⏳ ${t}s`;
-        if(t-- <= 0) { clearInterval(restInt); beep.play(); document.getElementById("restT").innerText = "Готово!"; }
-    }, 1000);
-}
-
-function edit(exI, setI, prop, val) { data[date][exI].arr[setI][prop] = +val; save(); updateChart(); }
-function delEx(i) { data[date].splice(i,1); save(); updateUI(); }
-
-function start() {
-    startTime = new Date(); document.getElementById("floater").style.display = "flex";
-    clearInterval(mainInt);
-    mainInt = setInterval(() => {
-        let diff = Math.floor((new Date() - startTime)/1000);
-        currentDuration = `${Math.floor(diff/60)}:${(diff%60).toString().padStart(2,'0')}`;
-        document.getElementById("mainT").innerText = `⏱ ${currentDuration}`;
-    }, 1000);
-}
-
-function finish() { 
-    clearInterval(mainInt); 
-    durations[date] = currentDuration;
-    save();
-    document.getElementById("result").innerText = `Тренування завершено за ${currentDuration}`;
-    document.getElementById("modal").style.display="flex"; 
-}
-
-// ГЕНЕРАЦІЯ PDF
 async function generatePDF() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     let y = 20;
 
-    doc.setFontSize(20);
-    doc.text("Pro-Fit Tracker: Звіт про тренування", 20, y);
-    y += 15;
+    doc.setFontSize(22); doc.text("PRO-FIT ELITE REPORT", 20, y); y += 15;
 
-    const sortedDates = Object.keys(data).sort().reverse();
+    Object.keys(data).sort().reverse().forEach(d => {
+        if(y > 270) { doc.addPage(); y = 20; }
+        doc.setFontSize(14); doc.setTextColor(59, 130, 246);
+        doc.text(`ДАТА: ${d} | ЧАС: ${durations[d] || '?'}`, 20, y); y += 8;
 
-    sortedDates.forEach(d => {
-        if (y > 270) { doc.addPage(); y = 20; }
-        doc.setFontSize(14);
-        doc.setTextColor(59, 130, 246);
-        doc.text(`Дата: ${d} | Час: ${durations[d] || "?"}`, 20, y);
-        y += 7;
-
-        doc.setFontSize(10);
-        doc.setTextColor(100);
+        doc.setFontSize(10); doc.setTextColor(100);
         if(notes[d]) { doc.text(`Нотатки: ${notes[d]}`, 20, y); y += 6; }
 
         data[d].forEach(ex => {
             doc.setTextColor(0);
-            let setsStr = ex.arr.map(s => `${s.r}x${s.w}kg`).join(", ");
-            doc.text(`• ${ex.name}: ${setsStr}`, 25, y);
-            y += 5;
-            if (y > 280) { doc.addPage(); y = 20; }
+            let sStr = ex.arr.map(s => `${s.r}x${s.w}kg`).join(', ');
+            doc.text(`- ${ex.name} (Темп: ${ex.tempo}): ${sStr}`, 25, y); y += 6;
+            if(y > 280) { doc.addPage(); y = 20; }
         });
-        y += 10;
+        y += 8;
     });
-
-    doc.save(`ProFit_History_${new Date().toISOString().split('T')[0]}.pdf`);
+    doc.save(`ProFit_Elite_${new Date().toISOString().split('T')[0]}.pdf`);
 }
 
-function showHistory() {
-    alert("Порівняння доступне в аналітиці графіку та звіті PDF.");
-}
-
-function closeModal() { document.getElementById("modal").style.display="none"; }
-function copyDay() { localStorage.setItem("copy", JSON.stringify(data[date])); alert("День скопійовано"); }
+function copyDay() { localStorage.setItem("copy", JSON.stringify(data[date])); alert("Copied"); }
 function pasteDay() { let c = localStorage.getItem("copy"); if(c) { data[date]=JSON.parse(c); save(); updateUI(); } }
 
 (()=>{
-    let today = new Date().toISOString().split("T")[0];
-    date = today; document.getElementById("date").value = today;
+    let t = new Date().toISOString().split("T")[0];
+    date = t; document.getElementById("date").value = t;
     document.getElementById("dayNotes").value = notes[date] || "";
     updateUI();
 })();
