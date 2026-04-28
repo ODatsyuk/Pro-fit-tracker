@@ -39,7 +39,6 @@ input, select { background: var(--input-bg); color:white; border: 1px solid #1e2
 button { background: var(--accent); color: white; font-weight: 700; cursor: pointer; transition: 0.2s; }
 button:active { transform: scale(0.98); }
 
-/* Стилі для вправ та перетягування */
 .exercise {
     background: var(--input-bg);
     padding:15px;
@@ -47,7 +46,6 @@ button:active { transform: scale(0.98); }
     margin-top:12px;
     border: 1px solid #1e293b;
     position: relative;
-    cursor: default;
 }
 
 .drag-handle {
@@ -63,10 +61,11 @@ button:active { transform: scale(0.98); }
     padding:8px; margin-top:8px; background: rgba(255,255,255,0.03); border-radius:10px;
 }
 
+.set-inputs { display: flex; gap: 5px; align-items: center; }
 .set input { width: 55px; padding: 6px; background: #1e293b; border: none; text-align: center; margin: 0;}
 
-.done-btn { width: 60px !important; margin: 0 !important; background: #1e293b; }
-.set.done { opacity: 0.3; text-decoration: line-through; }
+.done-btn { width: 60px !important; margin: 0 !important; background: #1e293b; color: white; transition: background 0.3s; }
+.set.done { opacity: 0.4; text-decoration: line-through; }
 .set.done .done-btn { background: var(--success); color: white; }
 
 .timer-float {
@@ -103,7 +102,7 @@ button:active { transform: scale(0.98); }
     <div class="card">
         <h3 style="margin:0 0 10px 0">📈 Аналітика вправи</h3>
         <select id="chartExSelect" onchange="updateChart()">
-            <option value="">Виберіть вправу для графіка</option>
+            <option value="">Виберіть вправу</option>
         </select>
         <div id="chartBox">
             <canvas id="myChart"></canvas>
@@ -112,15 +111,13 @@ button:active { transform: scale(0.98); }
 
     <div class="card">
         <h3 style="margin-top:0">➕ Додати вправу</h3>
-        <input id="name" list="popular-exercises" placeholder="Назва або виберіть зі списку">
+        <input id="name" list="popular-exercises" placeholder="Назва вправи">
         <datalist id="popular-exercises">
             <option value="Жим лежачи">
             <option value="Присідання зі штангою">
             <option value="Станова тяга">
             <option value="Підтягування">
-            <option value="Віджимання на брусах">
             <option value="Армійський жим">
-            <option value="Згинання на біцепс">
         </datalist>
         <div style="display:flex; gap:8px;">
             <input id="sets" type="number" placeholder="Підходи">
@@ -128,6 +125,19 @@ button:active { transform: scale(0.98); }
             <input id="weight" type="number" placeholder="Вага">
         </div>
         <button onclick="add()">ДОДАТИ</button>
+    </div>
+
+    <div class="card">
+        <div style="display:flex; gap:10px;">
+            <div style="flex:1">
+                <div style="font-size:11px; opacity:0.6">ВІДПОЧИНОК СЕТ (С)</div>
+                <input id="restSetVal" type="number" value="90">
+            </div>
+            <div style="flex:1">
+                <div style="font-size:11px; opacity:0.6">МІЖ ВПРАВАМИ (С)</div>
+                <input id="restExVal" type="number" value="180">
+            </div>
+        </div>
     </div>
 
     <div class="card" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
@@ -142,11 +152,19 @@ button:active { transform: scale(0.98); }
 
 <div class="modal" id="modal">
     <div class="modal-content">
-        <h2>🧠 AI Порада</h2>
-        <div style="font-size:12px; opacity:0.7">Важкість (1-10)</div>
-        <input id="q1" type="number" value="7">
-        <button onclick="getAI()" style="margin-top:15px;">АНАЛІЗ</button>
-        <div id="result" style="margin-top:15px; color: #93c5fd;"></div>
+        <h2 style="margin:0">🧠 Розумний ШІ Аналіз</h2>
+        <div style="font-size:12px; opacity:0.7; margin-top:15px;">Важкість тренування (1-10):</div>
+        <input id="q1" type="number" value="7" min="1" max="10">
+        
+        <div style="font-size:12px; opacity:0.7; margin-top:10px;">Стан енергії:</div>
+        <select id="aiEnergy">
+            <option value="high">Енергійний</option>
+            <option value="mid">Втомлений</option>
+            <option value="low">Виснажений</option>
+        </select>
+
+        <button onclick="getAI()" style="margin-top:20px;">АНАЛІЗУВАТИ ТРЕНУВАННЯ</button>
+        <div id="result" style="margin-top:15px; color: #93c5fd; font-size: 14px; line-height: 1.4;"></div>
         <button onclick="closeAI()" style="background:#374151; margin-top:10px;">ЗАКРИТИ</button>
     </div>
 </div>
@@ -174,14 +192,12 @@ function updateUI() {
     updateChart();
 }
 
-// Заповнюємо список вправ для графіка (унікальні назви з усієї історії)
 function fillChartSelect() {
     let select = document.getElementById("chartExSelect");
     let currentVal = select.value;
     let exercisesSet = new Set();
     Object.values(data).forEach(day => day.forEach(ex => exercisesSet.add(ex.name)));
-    
-    select.innerHTML = '<option value="">Виберіть вправу для графіка</option>';
+    select.innerHTML = '<option value="">Виберіть вправу</option>';
     exercisesSet.forEach(ex => {
         let opt = document.createElement("option");
         opt.value = ex; opt.innerText = ex;
@@ -194,7 +210,6 @@ function add() {
     let n = document.getElementById("name"), s = document.getElementById("sets"), r = document.getElementById("reps"), w = document.getElementById("weight");
     if(!date || !n.value || !s.value) return;
     if(!data[date]) data[date] = [];
-    
     let arr = [];
     for(let i=0; i<+s.value; i++) arr.push({r: +r.value || 0, w: +w.value || 0});
     data[date].push({name: n.value, arr});
@@ -202,15 +217,13 @@ function add() {
     n.value=""; s.value=""; r.value=""; w.value="";
 }
 
-/* DRAG & DROP LOGIC */
 let draggedIdx = null;
 function onDragStart(idx) { draggedIdx = idx; }
 function onDragOver(e) { e.preventDefault(); }
 function onDrop(idx) {
     if (draggedIdx === null || draggedIdx === idx) return;
-    const items = data[date];
-    const movedItem = items.splice(draggedIdx, 1)[0];
-    items.splice(idx, 0, movedItem);
+    const movedItem = data[date].splice(draggedIdx, 1)[0];
+    data[date].splice(idx, 0, movedItem);
     save(); render();
 }
 
@@ -218,36 +231,22 @@ function updateChart() {
     const ctx = document.getElementById('myChart').getContext('2d');
     const selectedEx = document.getElementById("chartExSelect").value;
     if(!selectedEx) return;
-
     let labels = [], weights = [];
-    // Сортуємо дати та шукаємо макс вагу для вибраної вправи
     Object.keys(data).sort().forEach(d => {
         let dayEx = data[d].find(ex => ex.name === selectedEx);
         if(dayEx) {
             labels.push(d.split("-").slice(1).join("/"));
-            let maxW = Math.max(...dayEx.arr.map(s => s.w));
-            weights.push(maxW);
+            weights.push(Math.max(...dayEx.arr.map(s => s.w)));
         }
     });
-
     if(myChart) myChart.destroy();
     myChart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: labels,
-            datasets: [{
-                label: selectedEx,
-                data: weights,
-                borderColor: '#3b82f6',
-                tension: 0.3,
-                fill: true,
-                backgroundColor: 'rgba(59, 130, 246, 0.1)'
-            }]
+            datasets: [{ label: selectedEx, data: weights, borderColor: '#3b82f6', tension: 0.3, fill: true, backgroundColor: 'rgba(59, 130, 246, 0.1)' }]
         },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            scales: { y: { beginAtZero: false, grid: { color: '#1e293b' } }, x: { grid: { display: false } } }
-        }
+        options: { responsive: true, maintainAspectRatio: false, scales: { y: { grid: { color: '#1e293b' } }, x: { grid: { display: false } } } }
     });
 }
 
@@ -257,17 +256,19 @@ function render() {
     if(!data[date]) return;
 
     data[date].forEach((e, i) => {
-        let setsHTML = e.arr.map((s, j) => `
-            <div class="set ${done[i+"-"+j]?'done':''}">
-                <div style="display:flex; gap:5px; align-items:center;">
+        let setsHTML = e.arr.map((s, j) => {
+            let isDone = done[i+"-"+j];
+            return `
+            <div class="set ${isDone ? 'done' : ''}">
+                <div class="set-inputs">
                     <input type="number" value="${s.r}" onchange="edit(${i},${j},'r',this.value)"> 
                     <small>×</small>
                     <input type="number" value="${s.w}" onchange="edit(${i},${j},'w',this.value)"> 
                     <small>кг</small>
                 </div>
                 <button class="done-btn" onclick="doneSet(${i},${j},${j===e.arr.length-1})">✔</button>
-            </div>
-        `).join("");
+            </div>`;
+        }).join("");
 
         let div = document.createElement("div");
         div.className = "exercise";
@@ -288,6 +289,31 @@ function render() {
     });
 }
 
+function doneSet(i, j, last) {
+    let key = i + "-" + j;
+    done[key] = !done[key];
+    if(done[key]) {
+        let sVal = +document.getElementById("restSetVal").value;
+        let eVal = +document.getElementById("restExVal").value;
+        showRest(last ? eVal : sVal);
+    }
+    render();
+}
+
+function showRest(sec) {
+    let t = sec; clearInterval(restInt);
+    document.getElementById("restT").style.color = "white";
+    restInt = setInterval(() => {
+        document.getElementById("restT").innerText = `⏳ ${t}s`;
+        if(t-- <= 0) { 
+            clearInterval(restInt); 
+            beep.play(); 
+            document.getElementById("restT").innerText = "⏳ Готово!"; 
+            document.getElementById("restT").style.color = "#10b981";
+        }
+    }, 1000);
+}
+
 function edit(exI, setI, prop, val) { data[date][exI].arr[setI][prop] = +val; save(); updateChart(); }
 function delEx(i) { data[date].splice(i,1); save(); updateUI(); }
 
@@ -302,25 +328,29 @@ function start() {
     }, 1000);
 }
 
-function showRest(sec) {
-    let t = sec; clearInterval(restInt);
-    restInt = setInterval(() => {
-        document.getElementById("restT").innerText = `⏳ ${t}s`;
-        if(t-- <= 0) { clearInterval(restInt); beep.play(); document.getElementById("restT").innerText = "⏳ Готово!"; }
-    }, 1000);
-}
-
-function doneSet(i, j, last) {
-    done[i+"-"+j] = !done[i+"-"+j];
-    if(done[i+"-"+j]) showRest(last ? +document.getElementById("restEx").value : +document.getElementById("restSet").value);
-    render();
-}
-
 function finish() { clearInterval(mainInt); document.getElementById("modal").style.display="flex"; }
 function closeAI() { document.getElementById("modal").style.display="none"; }
-function getAI() { document.getElementById("result").innerText = "Чудова робота! Ви тримаєте ритм."; }
 
-function copyDay() { localStorage.setItem("copy", JSON.stringify(data[date])); alert("Скопійовано!"); }
+function getAI() {
+    let rpe = +document.getElementById("q1").value;
+    let energy = document.getElementById("aiEnergy").value;
+    let selectedEx = document.getElementById("chartExSelect").value;
+    let msg = "";
+
+    if (rpe >= 9) {
+        msg = "⚠️ <b>Високий рівень навантаження.</b> Ваше тіло на межі. Рекомендую зробити наступне тренування легшим (deload) або збільшити час відпочинку між сетами.";
+    } else if (rpe <= 6 && energy === "high") {
+        msg = "🚀 <b>Потенціал для росту!</b> Тренування пройшло легко. Наступного разу спробуйте додати +2.5 кг у основних вправах або зробити на 1-2 повторення більше.";
+    } else if (energy === "low") {
+        msg = "💤 <b>Пріоритет на відновлення.</b> Ви виснажені. Сьогодні ви молодець, що потренувалися, але зверніть увагу на сон та харчування.";
+    } else {
+        msg = "✅ <b>Ідеальний баланс.</b> Ви працюєте в продуктивній зоні. Продовжуйте в тому ж темпі ще 2 тренування, перш ніж підвищувати вагу.";
+    }
+    
+    document.getElementById("result").innerHTML = msg;
+}
+
+function copyDay() { localStorage.setItem("copy", JSON.stringify(data[date])); alert("День скопійовано!"); }
 function pasteDay() { let c = localStorage.getItem("copy"); if(c) { data[date]=JSON.parse(c); save(); updateUI(); } }
 
 (()=>{
